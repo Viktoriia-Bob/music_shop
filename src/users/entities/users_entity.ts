@@ -1,6 +1,7 @@
-import {Column, Entity, OneToMany, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn, JoinColumn} from "typeorm";
 import {roleEnums} from "../enums/role_enums";
 import {Wishlist} from "../../wishlists/entities/wishlists_entity";
+import {CartWithSongs} from "../../cartsWitsSongs/entities/carts_with_songs_entity";
 
 @Entity()
 export class User {
@@ -16,4 +17,7 @@ export class User {
     public isBlocked!: boolean;
     @OneToMany(type => Wishlist, wishlist => wishlist.owner)
     public wishlist: Wishlist[];
+    @OneToOne(type => CartWithSongs, cart => cart.owner)
+    @JoinColumn({ name: 'cartId'})
+    public cartWithSongs: CartWithSongs[];
 }
