@@ -1,6 +1,7 @@
 import {Song} from "./src/songs/entities/songs_entity";
 import {createConnection} from "typeorm";
 import {User} from "./src/users/entities/users_entity";
+import {Wishlist} from "./src/wishlists/entities/wishlists_entity";
 
 export async function getDbConnection() {
     const DATABASE_HOST = process.env.DATABASE_HOST || 'localhost';
@@ -11,7 +12,8 @@ export async function getDbConnection() {
 
     const entities = [
         Song,
-        User
+        User,
+        Wishlist,
     ];
 
     return createConnection({

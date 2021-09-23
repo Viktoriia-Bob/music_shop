@@ -1,5 +1,6 @@
-import {Column, Entity, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Entity, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import {roleEnums} from "../enums/role_enums";
+import {Wishlist} from "../../wishlists/entities/wishlists_entity";
 
 @Entity()
 export class User {
@@ -13,4 +14,6 @@ export class User {
     public role!: roleEnums;
     @Column({default: false})
     public isBlocked!: boolean;
+    @OneToMany(type => Wishlist, wishlist => wishlist.owner)
+    public wishlist: Wishlist[];
 }

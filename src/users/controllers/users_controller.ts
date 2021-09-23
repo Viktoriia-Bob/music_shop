@@ -5,14 +5,12 @@ import {
     httpPatch,
     httpPost,
     requestBody,
-    requestParam,
-    response
+    requestParam
 } from "inversify-express-utils";
 import {Repository} from "typeorm";
 import {User} from "../entities/users_entity";
 import {inject} from "inversify";
 import {TYPE} from "../../constants/types";
-import * as express from 'express';
 
 @controller('/users')
 export class UsersController {
@@ -21,23 +19,24 @@ export class UsersController {
         this._userRepository = userRepository;
     }
     @httpGet('/')
-    public async getUsers(@response() res: express.Response) {
+    public async getUsers() {
         return this._userRepository.find();
     }
+    @httpGet('/:id')
+    public async getUserById(@requestParam('id') idParam: number) {
+        return this._userRepository.findOne({ id: idParam });
+    }
     @httpPost('/')
-    public async createUser(@response() res: express.Response,
-                            @requestBody() newUser: User) {
+    public async createUser(@requestBody() newUser: User) {
         return this._userRepository.save(this._userRepository.create(newUser));
     }
     @httpPatch('/:id')
-    public async updateUser(@response() res: express.Response,
-                            @requestBody() updateUser: User,
+    public async updateUser(@requestBody() updateUser: User,
                             @requestParam('id') idParam: number) {
         return this._userRepository.update({id: idParam}, updateUser);
     }
     @httpDelete('/:id')
-    public async removeUser(@response() res: express.Response,
-                            @requestParam('id') idParam: number) {
+    public async removeUser(@requestParam('id') idParam: number) {
         await this._userRepository.delete({id: idParam});
     }
 }

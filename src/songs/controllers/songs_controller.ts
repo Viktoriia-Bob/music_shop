@@ -5,10 +5,8 @@ import {
     httpPatch,
     httpPost,
     requestBody,
-    requestParam,
-    response
+    requestParam
 } from 'inversify-express-utils';
-import * as express from 'express';
 import {Song} from "../entities/songs_entity";
 import {Repository} from "typeorm";
 import {inject} from "inversify";
@@ -21,41 +19,20 @@ export class SongsController {
         this._songRepository = songRepository;
     }
     @httpGet('/')
-    public async get(@response() res: express.Response) {
-        try {
-            return this._songRepository.find();
-        } catch(e) {
-            res.status(500);
-            res.send(e.message);
-        }
+    public async get() {
+        return this._songRepository.find();
     }
     @httpPost('/')
-    public async post(@response() res: express.Response, @requestBody() newSong: Song) {
-        try {
-            return this._songRepository.save(this._songRepository.create(newSong));
-        } catch (e) {
-            res.status(500);
-            res.send(e.message);
-        }
+    public async post(@requestBody() newSong: Song) {
+        return this._songRepository.save(this._songRepository.create(newSong));
     }
     @httpPatch('/:id')
-    public async update(@response() res: express.Response,
-                        @requestBody() updateSong: Song,
+    public async update(@requestBody() updateSong: Song,
                         @requestParam('id') idParam: number) {
-        try {
-            return this._songRepository.update({id: idParam}, updateSong);
-        } catch (e) {
-            res.status(500);
-            res.send(e.message);
-        }
+        return this._songRepository.update({id: idParam}, updateSong);
     }
     @httpDelete('/:id')
-    public async remove(@response() res: express.Response, @requestParam('id') idParam: number) {
-        try {
-            return this._songRepository.delete({id: idParam});
-        } catch (e) {
-            res.status(500);
-            res.send(e.message);
-        }
+    public async remove(@requestParam('id') idParam: number) {
+        return this._songRepository.delete({id: idParam});
     }
 }
