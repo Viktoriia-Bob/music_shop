@@ -1,3 +1,4 @@
 export const TYPE = {
-    SongRepository: Symbol('SongRepository')
+    SongRepository: Symbol('SongRepository'),
+    UserRepository: Symbol('UserRepository'),
 }
