@@ -1,14 +1,15 @@
 import {
     Column,
     Entity,
-    JoinColumn,
+    JoinColumn, JoinTable, ManyToMany,
     OneToMany,
     OneToOne,
-    PrimaryGeneratedColumn,
+    PrimaryGeneratedColumn
 } from 'typeorm';
 import { roleEnums } from '../enums/role_enums';
 import { Wishlist } from '../../wishlists/entities/wishlists_entity';
 import { CartWithSongs } from '../../cartsWitsSongs/entities/carts_with_songs_entity';
+import { Song } from '../../songs/entities/songs_entity';
 
 @Entity()
 export class User {
@@ -27,4 +28,7 @@ export class User {
     @OneToOne((type) => CartWithSongs, (cart) => cart.owner)
     @JoinColumn({ name: 'cartId' })
     public cartWithSongs: CartWithSongs[];
+    @ManyToMany(() => Song)
+    @JoinTable({ name: 'buyedSongsId '})
+    public buyedSongs: Song[];
 }

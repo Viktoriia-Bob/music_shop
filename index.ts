@@ -4,6 +4,7 @@ import { InversifyExpressServer } from 'inversify-express-utils';
 import { bindings } from './inversify.config';
 import * as bodyParser from 'body-parser';
 import 'dotenv/config';
+import errorMiddleware from './src/middlewares/error_middleware';
 
 (async () => {
     const port = 3000;
@@ -17,6 +18,7 @@ import 'dotenv/config';
           })
         );
         expressApplication.use(bodyParser.json());
+        expressApplication.use(errorMiddleware)
     });
     const server = app.build();
 

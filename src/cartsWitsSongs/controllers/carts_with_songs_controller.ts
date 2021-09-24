@@ -12,7 +12,7 @@ import { CartWithSongs } from '../entities/carts_with_songs_entity';
 import { TYPE } from '../../constants/types';
 import { inject } from 'inversify';
 
-@controller('/cartWithSongs')
+@controller('/cart-with-songs')
 export class CartsWithSongsController {
     private readonly _cartRepository: Repository<CartWithSongs>;
 
