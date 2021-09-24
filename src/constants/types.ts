@@ -1,6 +1,6 @@
 export const TYPE = {
-    SongRepository: Symbol('SongRepository'),
-    UserRepository: Symbol('UserRepository'),
-    WishlistRepository: Symbol('WishlistRepository'),
-    CartWithSongsRepository: Symbol('CartWithSongsRepository'),
-}
+  SongRepository: Symbol('SongRepository'),
+  UserRepository: Symbol('UserRepository'),
+  WishlistRepository: Symbol('WishlistRepository'),
+  CartWithSongsRepository: Symbol('CartWithSongsRepository'),
+};

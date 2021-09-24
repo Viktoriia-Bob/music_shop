@@ -18,7 +18,9 @@ import errorMiddleware from './src/middlewares/error_middleware';
       })
     );
     expressApplication.use(bodyParser.json());
-    expressApplication.use(errorMiddleware);
+  });
+  app.setErrorConfig((app) => {
+    app.use(errorMiddleware);
   });
   const server = app.build();
 

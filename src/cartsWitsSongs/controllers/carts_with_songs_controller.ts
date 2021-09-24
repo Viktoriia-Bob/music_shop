@@ -1,11 +1,11 @@
 import {
-    controller,
-    httpDelete,
-    httpGet,
-    httpPatch,
-    httpPost,
-    requestBody,
-    requestParam,
+  controller,
+  httpDelete,
+  httpGet,
+  httpPatch,
+  httpPost,
+  requestBody,
+  requestParam,
 } from 'inversify-express-utils';
 import { Repository } from 'typeorm';
 import { CartWithSongs } from '../entities/carts_with_songs_entity';
@@ -14,35 +14,35 @@ import { inject } from 'inversify';
 
 @controller('/cart-with-songs')
 export class CartsWithSongsController {
-    private readonly _cartRepository: Repository<CartWithSongs>;
+  private readonly _cartRepository: Repository<CartWithSongs>;
 
-    constructor(
-      @inject(TYPE.CartWithSongsRepository)
-        cartRepository: Repository<CartWithSongs>
-    ) {
-        this._cartRepository = cartRepository;
-    }
+  constructor(
+    @inject(TYPE.CartWithSongsRepository)
+    cartRepository: Repository<CartWithSongs>
+  ) {
+    this._cartRepository = cartRepository;
+  }
 
-    @httpGet('/')
-    public async getCarts() {
-        return this._cartRepository.find();
-    }
+  @httpGet('/')
+  public async getCarts() {
+    return this._cartRepository.find();
+  }
 
-    @httpPost('/')
-    public async createCart(@requestBody() newCart: CartWithSongs) {
-        return this._cartRepository.save(this._cartRepository.create(newCart));
-    }
+  @httpPost('/')
+  public async createCart(@requestBody() newCart: CartWithSongs) {
+    return this._cartRepository.save(this._cartRepository.create(newCart));
+  }
 
-    @httpPatch('/:id')
-    public async updateCart(
-      @requestBody() updateCart: CartWithSongs,
-      @requestParam('id') id: number
-    ) {
-        return this._cartRepository.update({ id }, updateCart);
-    }
+  @httpPatch('/:id')
+  public async updateCart(
+    @requestBody() updateCart: CartWithSongs,
+    @requestParam('id') id: number
+  ) {
+    return this._cartRepository.update({ id }, updateCart);
+  }
 
-    @httpDelete('/:id')
-    public async removeCart(@requestParam('id') id: number) {
-        return this._cartRepository.delete({ id });
-    }
+  @httpDelete('/:id')
+  public async removeCart(@requestParam('id') id: number) {
+    return this._cartRepository.delete({ id });
+  }
 }

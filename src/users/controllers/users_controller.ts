@@ -28,7 +28,7 @@ export class UsersController {
 
   @httpGet('/')
   public async getUsers() {
-    this._songRepository.find();
+    await this._songRepository.find();
     return this._userRepository.find({ take: 10 });
   }
 
@@ -55,8 +55,8 @@ export class UsersController {
     await this._userRepository.delete({ id: idParam });
   }
 
-  @httpGet('/list-of-buyed-song/:id')
-  public async listOfBuyedSongs(@requestParam('id') id: number) {
-    return this._userRepository.findOne({ id }, { select: ['buyedSongs'] });
+  @httpGet('/list-of-bought-song/:id')
+  public async listOfBoughtSongs(@requestParam('id') id: number) {
+    return this._userRepository.findOne({ id }, { select: ['boughtSongs'] });
   }
 }
