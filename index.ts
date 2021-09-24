@@ -7,22 +7,22 @@ import 'dotenv/config';
 import errorMiddleware from './src/middlewares/error_middleware';
 
 (async () => {
-    const port = 3000;
-    const container = new Container();
-    await container.loadAsync(bindings);
-    const app = new InversifyExpressServer(container);
-    app.setConfig((expressApplication) => {
-        expressApplication.use(
-          bodyParser.urlencoded({
-              extended: true,
-          })
-        );
-        expressApplication.use(bodyParser.json());
-        expressApplication.use(errorMiddleware)
-    });
-    const server = app.build();
+  const port = 3000;
+  const container = new Container();
+  await container.loadAsync(bindings);
+  const app = new InversifyExpressServer(container);
+  app.setConfig((expressApplication) => {
+    expressApplication.use(
+      bodyParser.urlencoded({
+        extended: true,
+      })
+    );
+    expressApplication.use(bodyParser.json());
+    expressApplication.use(errorMiddleware);
+  });
+  const server = app.build();
 
-    server.listen(port, () => {
-        console.log(`Server running at port ${port}`);
-    });
+  server.listen(port, () => {
+    console.log(`Server running at port ${port}`);
+  });
 })();
