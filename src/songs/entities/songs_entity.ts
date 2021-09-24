@@ -1,4 +1,4 @@
-import {Column, Entity, PrimaryGeneratedColumn} from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Song {
@@ -10,8 +10,8 @@ export class Song {
     public genre!: string;
     @Column()
     public author!: string;
-    @Column({type: 'float', default: 0.0})
+    @Column({ type: 'float', default: 0.0 })
     public price!: number;
-    @Column({nullable: true})
+    @Column({ nullable: true })
     public image?: string;
 }

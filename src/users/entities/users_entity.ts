@@ -1,7 +1,14 @@
-import {Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn, JoinColumn} from "typeorm";
-import {roleEnums} from "../enums/role_enums";
-import {Wishlist} from "../../wishlists/entities/wishlists_entity";
-import {CartWithSongs} from "../../cartsWitsSongs/entities/carts_with_songs_entity";
+import {
+    Column,
+    Entity,
+    JoinColumn,
+    OneToMany,
+    OneToOne,
+    PrimaryGeneratedColumn,
+} from 'typeorm';
+import { roleEnums } from '../enums/role_enums';
+import { Wishlist } from '../../wishlists/entities/wishlists_entity';
+import { CartWithSongs } from '../../cartsWitsSongs/entities/carts_with_songs_entity';
 
 @Entity()
 export class User {
@@ -13,11 +20,11 @@ export class User {
     public email!: string;
     @Column('text')
     public role!: roleEnums;
-    @Column({default: false})
+    @Column({ default: false })
     public isBlocked!: boolean;
-    @OneToMany(type => Wishlist, wishlist => wishlist.owner)
+    @OneToMany((type) => Wishlist, (wishlist) => wishlist.owner)
     public wishlist: Wishlist[];
-    @OneToOne(type => CartWithSongs, cart => cart.owner)
-    @JoinColumn({ name: 'cartId'})
+    @OneToOne((type) => CartWithSongs, (cart) => cart.owner)
+    @JoinColumn({ name: 'cartId' })
     public cartWithSongs: CartWithSongs[];
 }

@@ -1,5 +1,5 @@
-import {getConnection} from "typeorm";
-import {Song} from "../entities/songs_entity";
+import { getConnection } from 'typeorm';
+import { Song } from '../entities/songs_entity';
 
 export function getSongsRepository() {
     const conn = getConnection();

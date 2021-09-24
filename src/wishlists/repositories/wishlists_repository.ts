@@ -1,5 +1,5 @@
-import {getConnection} from "typeorm";
-import {Wishlist} from "../entities/wishlists_entity";
+import { getConnection } from 'typeorm';
+import { Wishlist } from '../entities/wishlists_entity';
 
 export function getWishlistsRepository() {
     const conn = getConnection();

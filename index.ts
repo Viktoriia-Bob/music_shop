@@ -1,8 +1,8 @@
 import 'reflect-metadata';
-import {Container} from "inversify";
-import {InversifyExpressServer} from "inversify-express-utils";
-import {bindings} from "./inversify.config";
-import * as bodyParser from "body-parser";
+import { Container } from 'inversify';
+import { InversifyExpressServer } from 'inversify-express-utils';
+import { bindings } from './inversify.config';
+import * as bodyParser from 'body-parser';
 import 'dotenv/config';
 
 (async () => {
@@ -11,9 +11,11 @@ import 'dotenv/config';
     await container.loadAsync(bindings);
     const app = new InversifyExpressServer(container);
     app.setConfig((expressApplication) => {
-        expressApplication.use(bodyParser.urlencoded({
-            extended: true
-        }));
+        expressApplication.use(
+          bodyParser.urlencoded({
+              extended: true,
+          })
+        );
         expressApplication.use(bodyParser.json());
     });
     const server = app.build();
