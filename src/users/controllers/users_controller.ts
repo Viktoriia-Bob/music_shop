@@ -12,6 +12,8 @@ import { User } from '../entities/users_entity';
 import { inject } from 'inversify';
 import { TYPE } from '../../constants/types';
 import { Song } from '../../songs/entities/songs_entity';
+import { ValidationMiddleware } from '../../middlewares/validation_middleware';
+import { UserValidator } from '../validation/users_validation';
 
 @controller('/users')
 export class UsersController {
@@ -29,20 +31,20 @@ export class UsersController {
   @httpGet('/')
   public async getUsers() {
     await this._songRepository.find();
-    return this._userRepository.find({ take: 10 });
+    return this._userRepository.find();
   }
 
-  @httpGet('/:id')
+  @httpGet('/get-user/:id')
   public async getUserById(@requestParam('id') idParam: number) {
     return this._userRepository.findOne({ id: idParam });
   }
 
-  @httpPost('/')
+  @httpPost('/', ValidationMiddleware(UserValidator))
   public async createUser(@requestBody() newUser: User) {
     return this._userRepository.save(this._userRepository.create(newUser));
   }
 
-  @httpPatch('/:id')
+  @httpPatch('/:id', ValidationMiddleware(UserValidator))
   public async updateUser(
     @requestBody() updateUser: User,
     @requestParam('id') idParam: number
@@ -55,8 +57,9 @@ export class UsersController {
     await this._userRepository.delete({ id: idParam });
   }
 
-  @httpGet('/list-of-bought-song/:id')
+  @httpGet('/list-of-bought-songs/:id')
   public async listOfBoughtSongs(@requestParam('id') id: number) {
-    return this._userRepository.findOne({ id }, { select: ['boughtSongs'] });
+    const list = await this._userRepository.findOne({ id });
+    return list.boughtSongs;
   }
 }

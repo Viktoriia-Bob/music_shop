@@ -12,6 +12,7 @@ import { roleEnums } from '../enums/role_enums';
 import { Wishlist } from '../../wishlists/entities/wishlists_entity';
 import { CartWithSongs } from '../../cartsWitsSongs/entities/carts_with_songs_entity';
 import { Song } from '../../songs/entities/songs_entity';
+
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
@@ -24,9 +25,9 @@ export class User {
   public role!: roleEnums;
   @Column({ default: false })
   public isBlocked!: boolean;
-  @OneToMany((type) => Wishlist, (wishlist) => wishlist.owner)
+  @OneToMany(() => Wishlist, (wishlist) => wishlist.owner)
   public wishlist: Wishlist[];
-  @OneToOne((type) => CartWithSongs, (cart) => cart.owner)
+  @OneToOne(() => CartWithSongs, (cart) => cart.owner)
   @JoinColumn({ name: 'cartId' })
   public cartWithSongs: CartWithSongs[];
   @ManyToMany(() => Song)

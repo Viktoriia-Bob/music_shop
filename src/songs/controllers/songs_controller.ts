@@ -11,6 +11,8 @@ import { Song } from '../entities/songs_entity';
 import { Repository } from 'typeorm';
 import { inject } from 'inversify';
 import { TYPE } from '../../constants/types';
+import { ValidationMiddleware } from '../../middlewares/validation_middleware';
+import { SongValidator } from '../validation/songs_validation';
 
 @controller('/songs')
 export class SongsController {
@@ -25,12 +27,12 @@ export class SongsController {
     return this._songRepository.find();
   }
 
-  @httpPost('/')
+  @httpPost('/', ValidationMiddleware(SongValidator))
   public async post(@requestBody() newSong: Song) {
     return this._songRepository.save(this._songRepository.create(newSong));
   }
 
-  @httpPatch('/:id')
+  @httpPatch('/:id', ValidationMiddleware(SongValidator))
   public async update(
     @requestBody() updateSong: Song,
     @requestParam('id') idParam: number
