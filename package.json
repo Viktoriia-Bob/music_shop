@@ -9,7 +9,8 @@
     "build": "tsc",
     "start": "tsc && dist/index.js",
     "watch": "tsc --watch",
-    "test": "cd test && npm run test"
+    "test": "cd test && npm run test",
+    "typeorm:cli": "ts-node ./node_modules/typeorm/cli -f ./src/ormconfig.ts"
   },
   "repository": {
     "type": "git",
@@ -25,6 +26,7 @@
     "body-parser": "^1.19.0",
     "class-transformer": "^0.4.0",
     "class-validator": "^0.13.1",
+    "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "inversify": "^5.1.1",

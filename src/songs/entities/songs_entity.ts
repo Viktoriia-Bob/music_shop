@@ -12,6 +12,6 @@ export class Song {
   public author!: string;
   @Column({ type: 'float', default: 0.0 })
   public price!: number;
-  @Column({ nullable: true })
+  @Column({ default: 'https://picsum.photos/200' })
   public image?: string;
 }

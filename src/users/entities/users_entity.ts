@@ -22,7 +22,7 @@ export class User {
   @Column()
   public email!: string;
   @Column()
-  public password!: string;
+  public password?: string;
   @Column('text')
   public role!: roleEnums;
   @Column({ default: false })

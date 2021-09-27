@@ -3,6 +3,7 @@ import { Container } from 'inversify';
 import { InversifyExpressServer } from 'inversify-express-utils';
 import { bindings } from './inversify.config';
 import * as bodyParser from 'body-parser';
+import * as cors from 'cors';
 import 'dotenv/config';
 import errorMiddleware from './src/middlewares/error_middleware';
 
@@ -18,6 +19,7 @@ import errorMiddleware from './src/middlewares/error_middleware';
       })
     );
     expressApplication.use(bodyParser.json());
+    expressApplication.use(cors());
   });
   app.setErrorConfig((app) => {
     app.use(errorMiddleware);
