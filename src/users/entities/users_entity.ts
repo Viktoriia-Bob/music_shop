@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import { roleEnums } from '../enums/role_enums';
 import { Wishlist } from '../../wishlists/entities/wishlists_entity';
-import { CartWithSongs } from '../../cartsWitsSongs/entities/carts_with_songs_entity';
+import { CartWithSongs } from '../../cartsWithsSongs/entities/carts_with_songs_entity';
 import { Song } from '../../songs/entities/songs_entity';
 
 @Entity()
@@ -21,6 +21,8 @@ export class User {
   public username!: string;
   @Column()
   public email!: string;
+  @Column()
+  public password!: string;
   @Column('text')
   public role!: roleEnums;
   @Column({ default: false })

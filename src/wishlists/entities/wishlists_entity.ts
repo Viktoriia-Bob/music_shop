@@ -13,9 +13,9 @@ import { Song } from '../../songs/entities/songs_entity';
 export class Wishlist {
   @PrimaryGeneratedColumn()
   public id!: number;
-  @ManyToOne((type) => User, (user) => user.wishlist)
+  @ManyToOne(() => User, (user) => user.wishlist)
   public owner: User;
-  @ManyToMany((type) => Song)
+  @ManyToMany(() => Song)
   @JoinTable()
   public listOfSongs: Song[];
   @Column()
