@@ -21,6 +21,8 @@ export async function getDbConnection() {
     password: DATABASE_PASSWORD,
     database: DATABASE_DB,
     entities: entities,
-    synchronize: true,
+    synchronize: false,
+    migrations: ['./src/migration/*.ts'],
+    cli: { migrationsDir: './src/migration' },
   });
 }
