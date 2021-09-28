@@ -25,7 +25,7 @@ export class CartsWithSongsController {
 
   @httpGet('/')
   public async getCarts() {
-    return this._cartRepository.find();
+    return this._cartRepository.find({ skip: 0, take: 10 });
   }
 
   @httpPost('/')

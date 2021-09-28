@@ -12,7 +12,6 @@ import { Repository } from 'typeorm';
 import { User } from '../entities/users_entity';
 import { inject } from 'inversify';
 import { TYPE } from '../../constants/types';
-import { Song } from '../../songs/entities/songs_entity';
 import { ValidationMiddleware } from '../../middlewares/validation_middleware';
 import { UserValidator } from '../validation/users_validation';
 import { checkJwt } from '../../middlewares/check_jwt_middleware';
@@ -22,20 +21,14 @@ import { checkRole } from '../../middlewares/check_role_middleware';
 @controller('/users')
 export class UsersController {
   private readonly _userRepository: Repository<User>;
-  private readonly _songRepository: Repository<Song>;
 
-  constructor(
-    @inject(TYPE.UserRepository) userRepository: Repository<User>,
-    @inject(TYPE.SongRepository) songRepository: Repository<Song>
-  ) {
+  constructor(@inject(TYPE.UserRepository) userRepository: Repository<User>) {
     this._userRepository = userRepository;
-    this._songRepository = songRepository;
   }
 
   @httpGet('/', checkJwt(), checkRole(roleEnums.admin))
   public async getUsers() {
-    await this._songRepository.find();
-    return this._userRepository.find();
+    return this._userRepository.find({ skip: 0, take: 10 });
   }
 
   @httpGet('/get-user/:id')

@@ -24,7 +24,7 @@ export class WishlistsController {
 
   @httpGet('/')
   public async getWishlists() {
-    return this._wishlistRepository.find();
+    return this._wishlistRepository.find({ skip: 0, take: 10 });
   }
 
   @httpPost('/')
