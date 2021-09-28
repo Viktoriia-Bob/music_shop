@@ -15,7 +15,7 @@ export async function getDbConnection() {
 
   return createConnection({
     type: 'postgres',
-    host: DATABASE_HOST,
+    host: 'DATABASE_HOST_TEST',
     port: DATABASE_PORT,
     username: DATABASE_USER,
     password: DATABASE_PASSWORD,
@@ -25,4 +25,7 @@ export async function getDbConnection() {
     migrations: ['./src/migration/*.ts'],
     cli: { migrationsDir: './src/migration' },
   });
+
+  // dkjfhgdfglkmglk
+  const x = () => {};
 }
