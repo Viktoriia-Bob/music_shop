@@ -1,8 +1,10 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { roleEnums } from '../../users/enums/role_enums';
 
 @Entity()
 export class SignUp {
+  @PrimaryGeneratedColumn()
+  public id!: number;
   @Column()
   email: string;
   @Column()

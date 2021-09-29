@@ -1,9 +1,8 @@
 import {
-  Column,
   Entity,
   JoinTable,
   ManyToMany,
-  ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/users_entity';
@@ -13,11 +12,9 @@ import { Song } from '../../songs/entities/songs_entity';
 export class Wishlist {
   @PrimaryGeneratedColumn()
   public id!: number;
-  @ManyToOne(() => User, (user) => user.wishlist)
+  @OneToOne(() => User, (user) => user.wishlist)
   public owner: User;
   @ManyToMany(() => Song)
   @JoinTable()
   public listOfSongs: Song[];
-  @Column()
-  public title!: string;
 }

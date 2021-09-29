@@ -4,7 +4,6 @@ import {
   JoinColumn,
   JoinTable,
   ManyToMany,
-  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   Unique,
@@ -30,13 +29,14 @@ export class User {
   public role!: roleEnums;
   @Column({ default: false })
   public isBlocked!: boolean;
-  @OneToMany(() => Wishlist, (wishlist) => wishlist.owner)
-  public wishlist: Wishlist[];
-  @OneToOne(() => CartWithSongs, (cart) => cart.owner)
+  @OneToOne(() => Wishlist, (wishlist) => wishlist.owner, { cascade: true })
+  @JoinColumn({ name: 'wishlistId' })
+  public wishlist: Wishlist;
+  @OneToOne(() => CartWithSongs, (cart) => cart.owner, { cascade: true })
   @JoinColumn({ name: 'cartId' })
-  public cartWithSongs: CartWithSongs[];
+  public cartWithSongs: CartWithSongs;
   @ManyToMany(() => Song)
-  @JoinTable({ name: 'boughtSongsId ' })
+  @JoinTable({ name: 'boughtSongsId' })
   public boughtSongs: Song[];
   hashPassword() {
     this.password = bcrypt.hashSync(this.password, 8);
