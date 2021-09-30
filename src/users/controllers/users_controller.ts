@@ -4,6 +4,7 @@ import {
   httpGet,
   httpPatch,
   httpPost,
+  httpPut,
   requestBody,
   requestParam,
 } from 'inversify-express-utils';
@@ -14,6 +15,9 @@ import { TYPE } from '../../constants/types';
 import { Song } from '../../songs/entities/songs_entity';
 import { ValidationMiddleware } from '../../middlewares/validation_middleware';
 import { UserValidator } from '../validation/users_validation';
+import { checkJwt } from '../../middlewares/check_jwt_middleware';
+import { roleEnums } from '../enums/role_enums';
+import { checkRole } from '../../middlewares/check_role_middleware';
 
 @controller('/users')
 export class UsersController {
@@ -28,7 +32,7 @@ export class UsersController {
     this._songRepository = songRepository;
   }
 
-  @httpGet('/')
+  @httpGet('/', checkJwt(), checkRole(roleEnums.admin))
   public async getUsers() {
     await this._songRepository.find();
     return this._userRepository.find();
@@ -39,9 +43,16 @@ export class UsersController {
     return this._userRepository.findOne({ id: idParam });
   }
 
-  @httpPost('/', ValidationMiddleware(UserValidator))
+  @httpPost(
+    '/',
+    ValidationMiddleware(UserValidator),
+    checkJwt(),
+    checkRole(roleEnums.admin)
+  )
   public async createUser(@requestBody() newUser: User) {
-    return this._userRepository.save(this._userRepository.create(newUser));
+    const user = this._userRepository.create(newUser);
+    user.hashPassword();
+    return this._userRepository.save(user);
   }
 
   @httpPatch('/:id', ValidationMiddleware(UserValidator))
@@ -61,5 +72,12 @@ export class UsersController {
   public async listOfBoughtSongs(@requestParam('id') id: number) {
     const list = await this._userRepository.findOne({ id });
     return list.boughtSongs;
+  }
+
+  @httpPut('/block-user/:id', checkJwt(), checkRole(roleEnums.admin))
+  public async blockUser(@requestParam('id') id: number) {
+    const user = await this._userRepository.findOne({ id });
+    user.isBlocked = user.isBlocked === false;
+    return this._userRepository.save(user);
   }
 }
