@@ -23,6 +23,8 @@
   },
   "homepage": "https://github.com/Viktoriia-Bob/music_shop#readme",
   "dependencies": {
+    "@types/bcryptjs": "^2.4.2",
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "class-transformer": "^0.4.0",
     "class-validator": "^0.13.1",
@@ -31,6 +33,7 @@
     "express": "^4.17.1",
     "inversify": "^5.1.1",
     "inversify-express-utils": "^6.3.2",
+    "jsonwebtoken": "^8.5.1",
     "pg": "^8.7.1",
     "reflect-metadata": "^0.1.13",
     "typeorm": "^0.2.37"
