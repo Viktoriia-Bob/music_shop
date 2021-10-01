@@ -2,3 +2,5 @@ node_modules/
 .idea/
 dist/
 src/migrations/
+.env
+src/payment/

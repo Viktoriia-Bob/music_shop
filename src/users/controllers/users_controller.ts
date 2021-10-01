@@ -8,7 +8,9 @@ import {
   queryParam,
   requestBody,
   requestParam,
+  response,
 } from 'inversify-express-utils';
+import { Response } from 'express';
 import { Repository } from 'typeorm';
 import { User } from '../entities/users_entity';
 import { inject } from 'inversify';
@@ -19,6 +21,11 @@ import { checkJwt } from '../../middlewares/check_jwt_middleware';
 import { roleEnums } from '../enums/role_enums';
 import { Song } from '../../songs/entities/songs_entity';
 import { checkRole } from '../../middlewares/check_role_middleware';
+import Stripe from 'stripe';
+const stripe = new Stripe(process.env.STRIPE_API_KEY, {
+  apiVersion: '2020-08-27',
+  typescript: true,
+});
 
 @controller('/users')
 export class UsersController {
@@ -90,20 +97,60 @@ export class UsersController {
   @httpPost('/buy-song')
   public async buySong(
     @queryParam('userId') userId: number,
-    @queryParam('songId') songId: number
+    @queryParam('songId') songId: number,
+    @response() res: Response
   ) {
     const user = await this._userRepository.findOne(userId, {
       relations: ['boughtSongs'],
     });
     const song = await this._songRepository.findOne(songId);
-    user.boughtSongs.push(song);
-    return this._userRepository.save(user);
+
+    if (user.boughtSongs.map((songBought) => songBought.id).includes(song.id)) {
+      return `This song already exist in your collection`;
+    }
+    const session = await stripe.checkout.sessions.create({
+      line_items: [
+        {
+          price_data: {
+            unit_amount: song.price,
+            currency: 'usd',
+            product_data: {
+              name: song.name,
+            },
+          },
+          quantity: 1,
+        },
+      ],
+      payment_intent_data: {
+        receipt_email: user.email,
+      },
+      customer: user.customerId,
+      payment_method_types: ['card'],
+      mode: 'payment',
+      success_url: `http://localhost:3000/users/add-song-to-bought/${song.id}/user/${user.id}`,
+      cancel_url: `http://localhost:3000/users/buy-song?userId=${user.id}&songId=${songId}`,
+    });
+    console.log(session.url);
+    res.redirect(303, session.url);
   }
 
   @httpPut('/transfer-to-admin/:id', checkJwt(), checkRole(roleEnums.admin))
   public async transferToAdmin(@requestParam('id') id: number) {
     const user = await this._userRepository.findOne(id);
     user.role = roleEnums.admin;
+    return this._userRepository.save(user);
+  }
+
+  @httpGet('/add-song-to-bought/:songId/user/:userId')
+  public async addSongToBought(
+    @requestParam('songId') songId: number,
+    @requestParam('userId') userId: number
+  ) {
+    const song = await this._songRepository.findOne(songId);
+    const user = await this._userRepository.findOne(userId, {
+      relations: ['boughtSongs'],
+    });
+    user.boughtSongs.push(song);
     return this._userRepository.save(user);
   }
 }

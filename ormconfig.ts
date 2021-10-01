@@ -7,9 +7,10 @@ const config: ConnectionOptions = {
   username: process.env.POSTGRES_USER || 'postgres',
   password: process.env.POSTGRES_PASSWORD || 'secret',
   database: process.env.POSTGRES_DB || 'music_shop',
-  synchronize: true,
+  synchronize: false,
   entities: ['./src/*/entities/*_entity{.ts,.js}'],
   // entities: [__dirname + '/src/*/entities/*_entity{.ts,.js}'],
+  migrations: ['./src/migration/*.ts'],
   cli: {
     migrationsDir: 'src/migrations',
   },
