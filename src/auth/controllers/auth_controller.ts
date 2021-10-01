@@ -1,4 +1,10 @@
-import { controller, httpPost, requestBody } from 'inversify-express-utils';
+import {
+  controller,
+  httpGet,
+  httpPost,
+  queryParam,
+  requestBody,
+} from 'inversify-express-utils';
 import { Repository } from 'typeorm';
 import * as jwt from 'jsonwebtoken';
 import { inject } from 'inversify';
@@ -10,6 +16,7 @@ import { CartWithSongs } from '../../cartsWithsSongs/entities/carts_with_songs_e
 import { SignInDto } from '../dto/sign_in_dto';
 import { SignUpDto } from '../dto/sign_up_dto';
 import { ValidationMiddleware } from '../../middlewares/validation_middleware';
+import * as nodemailer from 'nodemailer';
 import Stripe from 'stripe';
 const stripe = new Stripe(process.env.STRIPE_API_KEY, {
   apiVersion: '2020-08-27',
@@ -21,6 +28,9 @@ export class AuthController {
   private readonly _userRepository: Repository<User>;
   private readonly _wishlistRepository: Repository<Wishlist>;
   private readonly _cartWithSongsRepository: Repository<CartWithSongs>;
+  private _transporter: nodemailer.Transporter;
+  private readonly emailUser = process.env.EMAIL_FOR_MAIL;
+  private readonly passwordEmail = process.env.PASSWORD_FOR_MAIL;
 
   constructor(
     @inject(TYPE.UserRepository) userRepository: Repository<User>,
@@ -31,6 +41,13 @@ export class AuthController {
     this._userRepository = userRepository;
     this._wishlistRepository = wishlistRepository;
     this._cartWithSongsRepository = cartWithSongRepository;
+    this._transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: this.emailUser,
+        pass: this.passwordEmail,
+      },
+    });
   }
 
   @httpPost('/sign-in/', ValidationMiddleware(SignInDto))
@@ -38,10 +55,13 @@ export class AuthController {
     const user = await this._userRepository.findOneOrFail({
       where: { email: newSignIn.email },
     });
+    if (!user.emailVerify) {
+      return `email not verified`;
+    }
     if (!user.checkIfUnencryptedPasswordIsValid(newSignIn.password)) {
       new Error(`Invalid password or email`);
     }
-    const secretKey = process.env.SECRET_JWT || 'secret_jwt';
+    const secretKey = process.env.SECRET_JWT;
     const accessToken = jwt.sign(
       { userId: user.id, email: user.email },
       secretKey,
@@ -77,10 +97,44 @@ export class AuthController {
           name: user.username,
         };
         const customer: Stripe.Customer = await stripe.customers.create(params);
-        user.customerId = await customer.id;
+        user.customerId = customer.id;
       };
       await CreateCustomer();
+      await this._userRepository.save(user);
+      await this.sendConfirmation(user.id);
+      return user;
+    }
+  }
+
+  @httpGet('/confirm')
+  public async confirmToken(@queryParam('token') token) {
+    let jwtPayload = jwt.verify(token, process.env.SECRET_JWT);
+    const user = await this._userRepository.findOne(jwtPayload.userId);
+    if (user) {
+      user.emailVerify = true;
       return this._userRepository.save(user);
     }
+  }
+
+  public async sendConfirmation(id: number) {
+    const user = await this._userRepository.findOne(id);
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      process.env.SECRET_JWT,
+      { expiresIn: '1h' }
+    );
+    const confirmLink = `http://localhost:3000/auth/confirm?token=${token}`;
+    let info = await this._transporter.sendMail({
+      from: `"Music Shop" <${process.env.EMAIL_FOR_MAIL}>`,
+      to: user.email,
+      subject: 'Verify User',
+      html: `
+        <h3>Hello, ${user.username}!</h3>
+        <p>Please use this <a href="${confirmLink}">link</a> to confirm your account</p>
+        `,
+    });
+
+    console.log('Message sent: %s', info.messageId);
+    return true;
   }
 }
