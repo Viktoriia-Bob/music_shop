@@ -5,6 +5,7 @@ import {
   httpPatch,
   httpPost,
   httpPut,
+  queryParam,
   requestBody,
   requestParam,
 } from 'inversify-express-utils';
@@ -27,8 +28,15 @@ export class UsersController {
   }
 
   @httpGet('/', checkJwt(), checkRole(roleEnums.admin))
-  public async getUsers() {
-    return this._userRepository.find({ skip: 0, take: 10 });
+  public async getUsers(
+    @queryParam('page') page = 1,
+    @queryParam('limit') limit = 10
+  ) {
+    if (limit < 100) {
+      return this._userRepository.find({ skip: (page - 1) * 10, take: limit });
+    } else {
+      return `Limit must be less than 100`;
+    }
   }
 
   @httpGet('/get-user/:id')

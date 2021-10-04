@@ -4,6 +4,7 @@ import {
   httpGet,
   httpPatch,
   httpPost,
+  queryParam,
   requestBody,
   requestParam,
 } from 'inversify-express-utils';
@@ -24,8 +25,15 @@ export class CartsWithSongsController {
   }
 
   @httpGet('/')
-  public async getCarts() {
-    return this._cartRepository.find({ skip: 0, take: 10 });
+  public async getCarts(
+    @queryParam('page') page = 1,
+    @queryParam('limit') limit = 10
+  ) {
+    if (limit < 100) {
+      return this._cartRepository.find({ skip: (page - 1) * 10, take: limit });
+    } else {
+      return `Limit must be less than 100`;
+    }
   }
 
   @httpPost('/')

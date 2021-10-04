@@ -4,6 +4,7 @@ import {
   httpGet,
   httpPatch,
   httpPost,
+  queryParam,
   requestBody,
   requestParam,
 } from 'inversify-express-utils';
@@ -23,8 +24,15 @@ export class SongsController {
   }
 
   @httpGet('/')
-  public async get() {
-    return this._songRepository.find({ skip: 0, take: 10 });
+  public async get(
+    @queryParam('page') page = 1,
+    @queryParam('limit') limit = 10
+  ) {
+    if (limit < 100) {
+      return this._songRepository.find({ skip: (page - 1) * 10, take: limit });
+    } else {
+      return `Limit must be less than 100`;
+    }
   }
 
   @httpPost('/', ValidationMiddleware(SongValidator))
