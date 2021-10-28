@@ -26,12 +26,17 @@ export class AuthController {
         new Error(`Invalid password or email`);
       }
       const secretKey = process.env.SECRET_JWT || 'secret_jwt';
-      const token = jwt.sign(
+      const accessToken = jwt.sign(
         { userId: user.id, email: user.email },
         secretKey,
         { expiresIn: '1h' }
       );
-      return { user, token };
+      const refreshToken = jwt.sign(
+        { userId: user.id, email: user.email },
+        secretKey,
+        { expiresIn: '1d' }
+      );
+      return { user, accessToken, refreshToken };
     }
   }
 

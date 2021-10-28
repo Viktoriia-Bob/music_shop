@@ -4,11 +4,12 @@ import {
   httpGet,
   httpPatch,
   httpPost,
+  queryParam,
   requestBody,
   requestParam,
 } from 'inversify-express-utils';
 import { Song } from '../entities/songs_entity';
-import { Repository } from 'typeorm';
+import { Between, Equal, Like, Repository } from 'typeorm';
 import { inject } from 'inversify';
 import { TYPE } from '../../constants/types';
 import { ValidationMiddleware } from '../../middlewares/validation_middleware';
@@ -23,8 +24,15 @@ export class SongsController {
   }
 
   @httpGet('/')
-  public async get() {
-    return this._songRepository.find();
+  public async get(
+    @queryParam('page') page = 1,
+    @queryParam('limit') limit = 10
+  ) {
+    if (limit < 100) {
+      return this._songRepository.find({ skip: (page - 1) * 10, take: limit });
+    } else {
+      return `Limit must be less than 100`;
+    }
   }
 
   @httpPost('/', ValidationMiddleware(SongValidator))
@@ -43,5 +51,28 @@ export class SongsController {
   @httpDelete('/:id')
   public async remove(@requestParam('id') idParam: number) {
     return this._songRepository.delete({ id: idParam });
+  }
+
+  @httpGet('/filter-by-genre/:genre')
+  public async filterByGenre(@requestParam('genre') genre: string) {
+    return this._songRepository.find({ genre: Equal(genre) });
+  }
+
+  @httpGet('/filter-by-author/:author')
+  public async filterByAuthor(@requestParam('author') author: string) {
+    return this._songRepository.find({ author: Equal(author) });
+  }
+
+  @httpGet('/filter-by-price/:priceLow/to/:priceHigh')
+  public async filterByPrice(
+    @requestParam('priceLow') priceLow: number,
+    @requestParam('priceHigh') priceHigh: number
+  ) {
+    return this._songRepository.find({ price: Between(priceLow, priceHigh) });
+  }
+
+  @httpGet('/search-by-name/:words')
+  public async searchByName(@requestParam('words') words) {
+    return this._songRepository.find({ name: Like(`%${words}%`) });
   }
 }
