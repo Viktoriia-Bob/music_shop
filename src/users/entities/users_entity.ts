@@ -23,6 +23,8 @@ export class User {
   public username!: string;
   @Column({ unique: true })
   public email!: string;
+  @Column({ default: false })
+  public emailVerify!: boolean;
   @Column()
   public password!: string;
   @Column({ type: 'enum', enum: roleEnums, default: roleEnums.user })

@@ -5,7 +5,7 @@ export const checkJwt =
   () => (req: Request, res: Response, next: NextFunction) => {
     const token = <string>req.headers.authorization.slice(7);
     let jwtPayload;
-    const secret_key = process.env.SECRET_JWT || 'secret_jwt';
+    const secret_key = process.env.SECRET_JWT;
 
     try {
       jwtPayload = jwt.verify(token, secret_key);

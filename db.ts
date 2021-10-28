@@ -5,11 +5,11 @@ import { Wishlist } from './src/wishlists/entities/wishlists_entity';
 import { CartWithSongs } from './src/cartsWithsSongs/entities/carts_with_songs_entity';
 
 export async function getDbConnection() {
-  const DATABASE_HOST = process.env.DATABASE_HOST || 'localhost';
-  const DATABASE_USER = process.env.DATABASE_USER || 'postgres';
+  const DATABASE_HOST = process.env.DATABASE_HOST;
+  const DATABASE_USER = process.env.DATABASE_USER;
   const DATABASE_PORT = 5432;
-  const DATABASE_PASSWORD = process.env.DATABASE_PASSWORD || 'secret';
-  const DATABASE_DB = process.env.DATABASE_DB || 'music_shop';
+  const DATABASE_PASSWORD = process.env.DATABASE_PASSWORD;
+  const DATABASE_DB = process.env.DATABASE_DB;
 
   const entities = [Song, User, Wishlist, CartWithSongs];
 

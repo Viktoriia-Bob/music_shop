@@ -19,6 +19,9 @@ export class UserValidator {
   @IsEmail()
   @IsNotEmpty()
   email;
+  @IsBoolean()
+  @IsNotEmpty()
+  emailVerify;
   @IsString()
   @IsNotEmpty()
   password;

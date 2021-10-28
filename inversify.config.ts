@@ -18,7 +18,6 @@ export const bindings = new AsyncContainerModule(async (bind) => {
   await require('./src/wishlists/controllers/wishlists_controller');
   await require('./src/cartsWithsSongs/controllers/carts_with_songs_controller');
   await require('./src/auth/controllers/auth_controller');
-  await require('./src/payment/controllers/payment_controller');
 
   bind<Repository<User>>(TYPE.UserRepository)
     .toDynamicValue(() => {
