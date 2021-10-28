@@ -8,14 +8,17 @@ import {
   queryParam,
   requestBody,
   requestParam,
+  response,
 } from 'inversify-express-utils';
 import { Repository } from 'typeorm';
 import { CartWithSongs } from '../entities/carts_with_songs_entity';
 import { TYPE } from '../../constants/types';
 import { inject } from 'inversify';
 import { Song } from '../../songs/entities/songs_entity';
+import { Response } from 'express';
+import { checkJwt } from '../../middlewares/check_jwt_middleware';
 
-@controller('/cart-with-songs')
+@controller('/cart-with-songs', checkJwt())
 export class CartsWithSongsController {
   private readonly _cartRepository: Repository<CartWithSongs>;
   private readonly _songRepository: Repository<Song>;
@@ -30,8 +33,15 @@ export class CartsWithSongsController {
   }
 
   @httpGet('/')
-  public async getCarts() {
-    return this._cartRepository.find({ skip: 0, take: 10 });
+  public async getCarts(
+    @queryParam('page') page = 1,
+    @queryParam('limit') limit = 10
+  ) {
+    if (limit < 100) {
+      return this._cartRepository.find({ skip: (page - 1) * 10, take: limit });
+    } else {
+      return `Limit must be less than 100`;
+    }
   }
 
   @httpPost('/')
@@ -52,14 +62,29 @@ export class CartsWithSongsController {
     return this._cartRepository.delete({ id });
   }
 
+  @httpGet('/get-songs-from-cart')
+  public async getSongsFromCart(@response() res: Response) {
+    const id = await res.locals.jwtPayload.userId;
+    const carts = await this._cartRepository.find({
+      relations: ['owner', 'listOfSongs'],
+    });
+    const cart = await carts.find((item) => item?.owner?.id === id);
+    return this._songRepository.findByIds(
+      [...cart.listOfSongs.map((song) => song.id)],
+      { relations: ['author', 'genre'] }
+    );
+  }
+
   @httpPut('/add-song')
   public async addSong(
-    @queryParam('cartId') cartId: number,
-    @queryParam('songId') songId: number
+    @queryParam('songId') songId: number,
+    @response() res: Response
   ) {
-    const cart = await this._cartRepository.findOne(cartId, {
-      relations: ['listOfSongs'],
+    const id = await res.locals.jwtPayload.userId;
+    const carts = await this._cartRepository.find({
+      relations: ['owner', 'listOfSongs'],
     });
+    const cart = await carts.find((item) => item?.owner?.id === id);
     const song = await this._songRepository.findOne(songId);
     cart.listOfSongs.push(song);
     return this._cartRepository.save(cart);
@@ -67,12 +92,14 @@ export class CartsWithSongsController {
 
   @httpPut('/delete-song')
   public async deleteSong(
-    @queryParam('cartId') cartId: number,
-    @queryParam('songId') songId: number
+    @queryParam('songId') songId: number,
+    @response() res: Response
   ) {
-    const cart = await this._cartRepository.findOne(cartId, {
-      relations: ['listOfSongs'],
+    const id = await res.locals.jwtPayload.userId;
+    const carts = await this._cartRepository.find({
+      relations: ['owner', 'listOfSongs'],
     });
+    const cart = await carts.find((item) => item?.owner?.id === id);
     const songToRemove = await this._songRepository.findOne(songId);
     cart.listOfSongs = cart.listOfSongs.filter(
       (song) => song.id !== songToRemove.id

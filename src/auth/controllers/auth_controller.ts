@@ -3,6 +3,7 @@ import {
   httpGet,
   httpPost,
   queryParam,
+  request,
   requestBody,
 } from 'inversify-express-utils';
 import { Repository } from 'typeorm';
@@ -65,18 +66,18 @@ export class AuthController {
     const accessToken = jwt.sign(
       { userId: user.id, email: user.email },
       secretKey,
-      { expiresIn: '1h' }
+      { expiresIn: '1d' }
     );
     const refreshToken = jwt.sign(
       { userId: user.id, email: user.email },
       secretKey,
-      { expiresIn: '1d' }
+      { expiresIn: '7d' }
     );
     return { user, accessToken, refreshToken };
   }
 
   @httpPost('/sign-up/', ValidationMiddleware(SignUpDto))
-  public async signUp(@requestBody() newSignUp: SignUpDto) {
+  public async signUp(@requestBody() newSignUp: SignUpDto, @request() req) {
     if (!newSignUp.role) {
       newSignUp.role = roleEnums.user;
     }
@@ -102,8 +103,9 @@ export class AuthController {
       await CreateCustomer();
       await this._userRepository.save(user);
       await this.sendConfirmation(user.id);
-      return user;
+      return { sendToEmail: true };
     }
+    return { exists: true, info: `User is exists` };
   }
 
   @httpGet('/confirm')
@@ -112,7 +114,8 @@ export class AuthController {
     const user = await this._userRepository.findOne(jwtPayload.userId);
     if (user) {
       user.emailVerify = true;
-      return this._userRepository.save(user);
+      await this._userRepository.save(user);
+      return { confirm: true };
     }
   }
 
@@ -124,7 +127,7 @@ export class AuthController {
       { expiresIn: '1h' }
     );
     const confirmLink = `http://localhost:3000/auth/confirm?token=${token}`;
-    let info = await this._transporter.sendMail({
+    await this._transporter.sendMail({
       from: `"Music Shop" <${process.env.EMAIL_FOR_MAIL}>`,
       to: user.email,
       subject: 'Verify User',
@@ -133,8 +136,6 @@ export class AuthController {
         <p>Please use this <a href="${confirmLink}">link</a> to confirm your account</p>
         `,
     });
-
-    console.log('Message sent: %s', info.messageId);
     return true;
   }
 }
