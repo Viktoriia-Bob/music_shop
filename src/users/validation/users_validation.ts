@@ -18,6 +18,7 @@ export class UserValidator {
   email;
   @IsString()
   password;
+  @IsOptional()
   @IsEnum(roleEnums)
   role?;
   @IsBoolean()
