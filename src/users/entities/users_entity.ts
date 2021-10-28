@@ -24,7 +24,7 @@ export class User {
   @Column({ unique: true })
   public email!: string;
   @Column()
-  public password?: string;
+  public password!: string;
   @Column({ type: 'enum', enum: roleEnums, default: roleEnums.user })
   public role!: roleEnums;
   @Column({ default: false })
@@ -38,6 +38,8 @@ export class User {
   @ManyToMany(() => Song)
   @JoinTable({ name: 'boughtSongsId' })
   public boughtSongs: Song[];
+  @Column()
+  public customerId: string;
   hashPassword() {
     this.password = bcrypt.hashSync(this.password, 8);
   }

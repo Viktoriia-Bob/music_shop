@@ -3,6 +3,7 @@ import {
   IsEmail,
   IsEnum,
   IsInt,
+  IsNotEmpty,
   IsOptional,
   IsString,
 } from 'class-validator';
@@ -13,10 +14,13 @@ export class UserValidator {
   @IsOptional()
   id?;
   @IsString()
+  @IsNotEmpty()
   username;
   @IsEmail()
+  @IsNotEmpty()
   email;
   @IsString()
+  @IsNotEmpty()
   password;
   @IsOptional()
   @IsEnum(roleEnums)
@@ -30,4 +34,6 @@ export class UserValidator {
   cartWithSongs?;
   @IsOptional()
   boughtSongs?;
+  @IsOptional()
+  customerId;
 }
