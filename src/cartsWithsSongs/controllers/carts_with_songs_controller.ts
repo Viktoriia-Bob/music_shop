@@ -1,7 +1,6 @@
 import {
   controller,
   httpDelete,
-  httpGet,
   httpPatch,
   httpPost,
   httpPut,
@@ -29,9 +28,15 @@ export class CartsWithSongsController {
     this._songRepository = songRepository;
   }
 
-  @httpGet('/')
-  public async getCarts() {
-    return this._cartRepository.find({ skip: 0, take: 10 });
+  public async getCarts(
+    @queryParam('skip') skip = 0,
+    @queryParam('take') take = 99
+  ) {
+    if (take < 100) {
+      return this._cartRepository.find({ skip: skip, take: take });
+    } else {
+      return `Limit must be less than 100`;
+    }
   }
 
   @httpPost('/')
