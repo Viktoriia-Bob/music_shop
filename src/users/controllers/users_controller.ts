@@ -22,12 +22,13 @@ import { roleEnums } from '../enums/role_enums';
 import { Song } from '../../songs/entities/songs_entity';
 import { checkRole } from '../../middlewares/check_role_middleware';
 import Stripe from 'stripe';
+
 const stripe = new Stripe(process.env.STRIPE_API_KEY, {
   apiVersion: '2020-08-27',
   typescript: true,
 });
 
-@controller('/users')
+@controller('/users', checkJwt())
 export class UsersController {
   private readonly _userRepository: Repository<User>;
   private readonly _songRepository: Repository<Song>;
@@ -40,13 +41,17 @@ export class UsersController {
     this._songRepository = songRepository;
   }
 
-  @httpGet('/', checkJwt(), checkRole(roleEnums.admin))
+  @httpGet('/', checkRole(roleEnums.admin))
   public async getUsers(
-    @queryParam('page') page = 1,
-    @queryParam('limit') limit = 10
+    @queryParam('skip') skip = 0,
+    @queryParam('take') take = 99
   ) {
-    if (limit < 100) {
-      return this._userRepository.find({ skip: (page - 1) * 10, take: limit });
+    if (take < 100) {
+      return this._userRepository.find({
+        skip: skip,
+        take: take,
+        order: { id: 'ASC' },
+      });
     } else {
       return `Limit must be less than 100`;
     }
@@ -86,12 +91,20 @@ export class UsersController {
     await this._userRepository.delete({ id: idParam });
   }
 
-  @httpGet('/list-of-bought-songs/:id')
-  public async listOfBoughtSongs(@requestParam('id') id: number) {
+  @httpGet('/list-of-bought-songs/')
+  public async listOfBoughtSongs(
+    @response() res: Response,
+    @queryParam('skip') skip = 0,
+    @queryParam('take') take = 99
+  ) {
+    const id = res.locals.jwtPayload.userId;
     const list = await this._userRepository.findOne(id, {
       relations: ['boughtSongs'],
     });
-    return list.boughtSongs;
+    return this._songRepository.findByIds(
+      [...list.boughtSongs.map((song) => song.id)],
+      { relations: ['author', 'genre'], take: take, skip: skip }
+    );
   }
 
   @httpPut('/block-user/:id', checkJwt(), checkRole(roleEnums.admin))
@@ -102,27 +115,28 @@ export class UsersController {
   }
 
   @httpPost('/buy-song')
-  public async buySong(
-    @queryParam('userId') userId: number,
-    @queryParam('songId') songId: number,
-    @response() res: Response
-  ) {
-    const user = await this._userRepository.findOne(userId, {
+  public async buySong(@response() res: Response, @requestBody() body) {
+    const id = res.locals.jwtPayload.userId;
+    const user = await this._userRepository.findOne(id, {
       relations: ['boughtSongs'],
     });
-    const song = await this._songRepository.findOne(songId);
-
-    if (user.boughtSongs.map((songBought) => songBought.id).includes(song.id)) {
-      return `This song already exist in your collection`;
-    }
+    const songs = await this._songRepository.findByIds(
+      body.map((song) => song.id)
+    );
+    const price = songs
+      .map((song) => song.price)
+      .reduce((prev, cur) => prev + cur);
+    const name = songs
+      .map((song) => song.name)
+      .reduce((prev, cur) => prev.concat('_' + cur));
     const session = await stripe.checkout.sessions.create({
       line_items: [
         {
           price_data: {
-            unit_amount: song.price,
+            unit_amount: price,
             currency: 'usd',
             product_data: {
-              name: song.name,
+              name: name,
             },
           },
           quantity: 1,
@@ -134,30 +148,32 @@ export class UsersController {
       customer: user.customerId,
       payment_method_types: ['card'],
       mode: 'payment',
-      success_url: `http://localhost:3000/users/add-song-to-bought/${song.id}/user/${user.id}`,
-      cancel_url: `http://localhost:3000/users/buy-song?userId=${user.id}&songId=${songId}`,
+      success_url: `http://localhost:3000/confirm-payload`,
+      cancel_url: `http://localhost:3000`,
     });
-    console.log(session.url);
-    res.redirect(303, session.url);
+    return { url: session.url };
   }
 
   @httpPut('/transfer-to-admin/:id', checkJwt(), checkRole(roleEnums.admin))
   public async transferToAdmin(@requestParam('id') id: number) {
     const user = await this._userRepository.findOne(id);
-    user.role = roleEnums.admin;
+    if (user.role === roleEnums.admin) {
+      user.role = roleEnums.user;
+    } else {
+      user.role = roleEnums.admin;
+    }
     return this._userRepository.save(user);
   }
 
-  @httpGet('/add-song-to-bought/:songId/user/:userId')
-  public async addSongToBought(
-    @requestParam('songId') songId: number,
-    @requestParam('userId') userId: number
-  ) {
-    const song = await this._songRepository.findOne(songId);
-    const user = await this._userRepository.findOne(userId, {
-      relations: ['boughtSongs'],
+  @httpGet('/add-song-to-bought')
+  public async addSongToBought(@response() res: Response) {
+    const id = await res.locals.jwtPayload.userId;
+    const user = await this._userRepository.findOne(id, {
+      relations: ['boughtSongs', 'cartWithSongs', 'cartWithSongs.listOfSongs'],
     });
-    user.boughtSongs.push(song);
+    const songs = user.cartWithSongs.listOfSongs;
+    user.boughtSongs.push(...songs);
+    user.cartWithSongs.listOfSongs = [];
     return this._userRepository.save(user);
   }
 }
