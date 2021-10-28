@@ -10,6 +10,12 @@ import { Wishlist } from './src/wishlists/entities/wishlists_entity';
 import { getWishlistsRepository } from './src/wishlists/repositories/wishlists_repository';
 import { CartWithSongs } from './src/cartsWithsSongs/entities/carts_with_songs_entity';
 import { getCartsWithSongsRepository } from './src/cartsWithsSongs/repositories/carts_with_songs_repository';
+import { getGenreSongsRepository } from './src/songs/repositories/genre_songs_entity';
+import { GenreSongs } from './src/songs/entities/genre_songs_entity';
+import { AuthorSongs } from './src/songs/entities/author_songs_entity';
+import { getAuthorSongsRepository } from './src/songs/repositories/author_songs_repository';
+import { AuthorSkinTone } from './src/songs/entities/author_skintone_entity';
+import { getAuthorSkinRepository } from './src/songs/repositories/author_skintone_repository';
 
 export const bindings = new AsyncContainerModule(async (bind) => {
   await getDbConnection();
@@ -37,6 +43,21 @@ export const bindings = new AsyncContainerModule(async (bind) => {
   bind<Repository<CartWithSongs>>(TYPE.CartWithSongsRepository)
     .toDynamicValue(() => {
       return getCartsWithSongsRepository();
+    })
+    .inRequestScope();
+  bind<Repository<GenreSongs>>(TYPE.GenreSongsRepository)
+    .toDynamicValue(() => {
+      return getGenreSongsRepository();
+    })
+    .inRequestScope();
+  bind<Repository<AuthorSongs>>(TYPE.AuthorSongsRepository)
+    .toDynamicValue(() => {
+      return getAuthorSongsRepository();
+    })
+    .inRequestScope();
+  bind<Repository<AuthorSkinTone>>(TYPE.AuthorSkinRepository)
+    .toDynamicValue(() => {
+      return getAuthorSkinRepository();
     })
     .inRequestScope();
 });

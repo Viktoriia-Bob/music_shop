@@ -2,12 +2,12 @@ import HttpException from '../exceptions/HttpException';
 import { NextFunction, Request, Response } from 'express';
 import { ValidationError } from 'class-validator';
 
-function errorMiddleware(
+export const errorMiddleware = (
   error: HttpException,
   request: Request,
   response: Response,
   next: NextFunction
-) {
+) => {
   if (error instanceof ValidationError) {
     response.status(500).json(error);
   }
@@ -17,6 +17,4 @@ function errorMiddleware(
     status,
     message,
   });
-}
-
-export default errorMiddleware;
+};
