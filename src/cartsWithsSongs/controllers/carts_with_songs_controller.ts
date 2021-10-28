@@ -34,11 +34,11 @@ export class CartsWithSongsController {
 
   @httpGet('/')
   public async getCarts(
-    @queryParam('page') page = 1,
-    @queryParam('limit') limit = 10
+    @queryParam('skip') skip = 0,
+    @queryParam('take') take = 99
   ) {
-    if (limit < 100) {
-      return this._cartRepository.find({ skip: (page - 1) * 10, take: limit });
+    if (take < 100) {
+      return this._cartRepository.find({ skip: skip, take: take });
     } else {
       return `Limit must be less than 100`;
     }
