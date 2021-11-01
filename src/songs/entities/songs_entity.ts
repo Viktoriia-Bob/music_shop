@@ -24,7 +24,7 @@ export class Song {
   @JoinColumn()
   public author!: AuthorSongs;
 
-  @Column({ type: 'float', default: 0.0 })
+  @Column({ default: 0 })
   public price!: number;
 
   @Column({ default: 'https://picsum.photos/200' })

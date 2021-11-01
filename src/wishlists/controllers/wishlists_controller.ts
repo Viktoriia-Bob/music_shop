@@ -10,47 +10,31 @@ import {
   requestParam,
   response,
 } from 'inversify-express-utils';
-import { Repository } from 'typeorm';
+import { inject } from 'inversify';
+import { Response } from 'express';
+
 import { Wishlist } from '../entities/wishlists_entity';
 import { TYPE } from '../../constants/types';
-import { inject } from 'inversify';
-import { Song } from '../../songs/entities/songs_entity';
 import { checkJwt } from '../../middlewares/check_jwt_middleware';
-import { Response } from 'express';
+import { WishlistsService } from '../services/wishlists_service';
 
 @controller('/wishlists', checkJwt())
 export class WishlistsController {
-  private readonly _wishlistRepository: Repository<Wishlist>;
-  private readonly _songRepository: Repository<Song>;
-
   constructor(
-    @inject(TYPE.WishlistRepository) wishlistRepository: Repository<Wishlist>,
-    @inject(TYPE.SongRepository) songRepository: Repository<Song>
-  ) {
-    this._wishlistRepository = wishlistRepository;
-    this._songRepository = songRepository;
-  }
+    @inject(TYPE.WishlistsService) private wishlistsService: WishlistsService
+  ) {}
 
   @httpGet('/')
   public async getWishlists(
     @queryParam('skip') skip = 0,
     @queryParam('take') take = 99
   ) {
-    if (take < 100) {
-      return this._wishlistRepository.find({
-        skip: skip,
-        take: take,
-      });
-    } else {
-      return `Limit must be less than 100`;
-    }
+    return this.wishlistsService.getWishlists(skip, take);
   }
 
   @httpPost('/')
   public async createWishlist(@requestBody() newWishlist: Wishlist) {
-    return this._wishlistRepository.save(
-      this._wishlistRepository.create(newWishlist)
-    );
+    return this.wishlistsService.createWishlist(newWishlist);
   }
 
   @httpPatch('/:id')
@@ -58,12 +42,12 @@ export class WishlistsController {
     @requestParam('id') idParam,
     @requestBody() updateWishlist: Wishlist
   ) {
-    return this._wishlistRepository.update({ id: idParam }, updateWishlist);
+    return this.wishlistsService.updateWishlist(idParam, updateWishlist);
   }
 
   @httpDelete('/:id')
   public async deleteWishlist(@requestParam('id') idParam: number) {
-    await this._wishlistRepository.delete({ id: idParam });
+    return this.wishlistsService.deleteWishlist(idParam);
   }
 
   @httpGet('/get-songs-from-wishlist')
@@ -73,16 +57,7 @@ export class WishlistsController {
     @queryParam('take') take = 99
   ) {
     const id = await res.locals.jwtPayload.userId;
-    const wishlists = await this._wishlistRepository.find({
-      relations: ['owner', 'listOfSongs'],
-      take: take,
-      skip: skip,
-    });
-    const wishlist = await wishlists.find((item) => item?.owner?.id === id);
-    return this._songRepository.findByIds(
-      [...wishlist.listOfSongs.map((song) => song.id)],
-      { relations: ['author', 'genre'] }
-    );
+    return this.wishlistsService.getSongsFromWishlist(id, skip, take);
   }
 
   @httpPut('/add-song')
@@ -91,13 +66,7 @@ export class WishlistsController {
     @response() res: Response
   ) {
     const id = await res.locals.jwtPayload.userId;
-    const wishlists = await this._wishlistRepository.find({
-      relations: ['owner', 'listOfSongs'],
-    });
-    const wishlist = await wishlists.find((item) => item?.owner?.id === id);
-    const song = await this._songRepository.findOne(songId);
-    wishlist.listOfSongs.push(song);
-    return this._wishlistRepository.save(wishlist);
+    return this.wishlistsService.addSong(songId, id);
   }
 
   @httpPut('/delete-song')
@@ -106,14 +75,6 @@ export class WishlistsController {
     @response() res: Response
   ) {
     const id = await res.locals.jwtPayload.userId;
-    const wishlists = await this._wishlistRepository.find({
-      relations: ['owner', 'listOfSongs'],
-    });
-    const wishlist = await wishlists.find((item) => item.owner.id === id);
-    const songToRemove = await this._songRepository.findOne(songId);
-    wishlist.listOfSongs = wishlist.listOfSongs.filter((song) => {
-      return song.id !== songToRemove.id;
-    });
-    return this._wishlistRepository.save(wishlist);
+    return this.wishlistsService.deleteSong(songId, id);
   }
 }

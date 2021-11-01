@@ -19,6 +19,8 @@ export const checkJwt =
     const newToken = jwt.sign({ userId, email }, secret_key, {
       expiresIn: '1h',
     });
+
     res.setHeader('token', newToken);
+
     next();
   };

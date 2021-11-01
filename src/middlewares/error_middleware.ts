@@ -11,8 +11,10 @@ export const errorMiddleware = (
   if (error instanceof ValidationError) {
     response.status(500).json(error);
   }
+
   const status = error.status || 500;
   const message = error.message || 'Something went wrong';
+
   response.status(status).send({
     status,
     message,

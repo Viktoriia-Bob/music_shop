@@ -12,8 +12,10 @@ import { Song } from '../../songs/entities/songs_entity';
 export class CartWithSongs {
   @PrimaryGeneratedColumn()
   public id!: number;
+
   @OneToOne(() => User, (user) => user.cartWithSongs)
   public owner: User;
+
   @ManyToMany(() => Song)
   @JoinTable()
   public listOfSongs: Song[];

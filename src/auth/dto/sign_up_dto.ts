@@ -13,6 +13,7 @@ export class SignUpDto {
   @IsEmail()
   @IsNotEmpty()
   email;
+
   @IsString()
   @IsNotEmpty()
   @Matches(
@@ -20,9 +21,11 @@ export class SignUpDto {
     { message: 'Weak password' }
   )
   password;
+
   @IsString()
   @IsNotEmpty()
   username;
+
   @IsOptional()
   @IsEnum(roleEnums)
   role;
