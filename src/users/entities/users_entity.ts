@@ -4,7 +4,6 @@ import {
   JoinColumn,
   JoinTable,
   ManyToMany,
-  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   Unique,
@@ -20,24 +19,40 @@ import { Song } from '../../songs/entities/songs_entity';
 export class User {
   @PrimaryGeneratedColumn()
   public id!: number;
+
   @Column()
   public username!: string;
+
   @Column({ unique: true })
   public email!: string;
+
+  @Column({ default: false })
+  public emailVerify!: boolean;
+
   @Column()
-  public password?: string;
+  public password!: string;
+
   @Column({ type: 'enum', enum: roleEnums, default: roleEnums.user })
   public role!: roleEnums;
+
   @Column({ default: false })
   public isBlocked!: boolean;
-  @OneToMany(() => Wishlist, (wishlist) => wishlist.owner)
-  public wishlist: Wishlist[];
-  @OneToOne(() => CartWithSongs, (cart) => cart.owner)
+
+  @OneToOne(() => Wishlist, (wishlist) => wishlist.owner, { cascade: true })
+  @JoinColumn({ name: 'wishlistId' })
+  public wishlist: Wishlist;
+
+  @OneToOne(() => CartWithSongs, (cart) => cart.owner, { cascade: true })
   @JoinColumn({ name: 'cartId' })
-  public cartWithSongs: CartWithSongs[];
+  public cartWithSongs: CartWithSongs;
+
   @ManyToMany(() => Song)
-  @JoinTable({ name: 'boughtSongsId ' })
+  @JoinTable({ name: 'boughtSongsId' })
   public boughtSongs: Song[];
+
+  @Column()
+  public customerId: string;
+
   hashPassword() {
     this.password = bcrypt.hashSync(this.password, 8);
   }

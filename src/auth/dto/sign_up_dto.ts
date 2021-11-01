@@ -1,10 +1,19 @@
-import { IsEmail, IsNotEmpty, IsString, Matches } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
+} from 'class-validator';
+import { roleEnums } from '../../users/enums/role_enums';
 
-export class SignUpValidator {
+export class SignUpDto {
   @IsString()
   @IsEmail()
   @IsNotEmpty()
   email;
+
   @IsString()
   @IsNotEmpty()
   @Matches(
@@ -12,7 +21,12 @@ export class SignUpValidator {
     { message: 'Weak password' }
   )
   password;
+
   @IsString()
   @IsNotEmpty()
   username;
+
+  @IsOptional()
+  @IsEnum(roleEnums)
+  role;
 }

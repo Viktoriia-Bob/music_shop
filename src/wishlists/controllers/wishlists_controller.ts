@@ -4,34 +4,37 @@ import {
   httpGet,
   httpPatch,
   httpPost,
+  httpPut,
+  queryParam,
   requestBody,
   requestParam,
+  response,
 } from 'inversify-express-utils';
-import { Repository } from 'typeorm';
+import { inject } from 'inversify';
+import { Response } from 'express';
+
 import { Wishlist } from '../entities/wishlists_entity';
 import { TYPE } from '../../constants/types';
-import { inject } from 'inversify';
+import { checkJwt } from '../../middlewares/check_jwt_middleware';
+import { WishlistsService } from '../services/wishlists_service';
 
-@controller('/wishlists')
+@controller('/wishlists', checkJwt())
 export class WishlistsController {
-  private readonly _wishlistRepository: Repository<Wishlist>;
-
   constructor(
-    @inject(TYPE.WishlistRepository) wishlistRepository: Repository<Wishlist>
-  ) {
-    this._wishlistRepository = wishlistRepository;
-  }
+    @inject(TYPE.WishlistsService) private wishlistsService: WishlistsService
+  ) {}
 
   @httpGet('/')
-  public async getWishlists() {
-    return this._wishlistRepository.find();
+  public async getWishlists(
+    @queryParam('skip') skip = 0,
+    @queryParam('take') take = 99
+  ) {
+    return this.wishlistsService.getWishlists(skip, take);
   }
 
   @httpPost('/')
   public async createWishlist(@requestBody() newWishlist: Wishlist) {
-    return this._wishlistRepository.save(
-      this._wishlistRepository.create(newWishlist)
-    );
+    return this.wishlistsService.createWishlist(newWishlist);
   }
 
   @httpPatch('/:id')
@@ -39,11 +42,39 @@ export class WishlistsController {
     @requestParam('id') idParam,
     @requestBody() updateWishlist: Wishlist
   ) {
-    return this._wishlistRepository.update({ id: idParam }, updateWishlist);
+    return this.wishlistsService.updateWishlist(idParam, updateWishlist);
   }
 
   @httpDelete('/:id')
   public async deleteWishlist(@requestParam('id') idParam: number) {
-    await this._wishlistRepository.delete({ id: idParam });
+    return this.wishlistsService.deleteWishlist(idParam);
+  }
+
+  @httpGet('/get-songs-from-wishlist')
+  public async getSongsFromWishlist(
+    @response() res: Response,
+    @queryParam('skip') skip = 0,
+    @queryParam('take') take = 99
+  ) {
+    const id = await res.locals.jwtPayload.userId;
+    return this.wishlistsService.getSongsFromWishlist(id, skip, take);
+  }
+
+  @httpPut('/add-song')
+  public async addSong(
+    @queryParam('songId') songId: number,
+    @response() res: Response
+  ) {
+    const id = await res.locals.jwtPayload.userId;
+    return this.wishlistsService.addSong(songId, id);
+  }
+
+  @httpPut('/delete-song')
+  public async deleteSong(
+    @queryParam('songId') songId: number,
+    @response() res: Response
+  ) {
+    const id = await res.locals.jwtPayload.userId;
+    return this.wishlistsService.deleteSong(songId, id);
   }
 }

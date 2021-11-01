@@ -9,9 +9,11 @@ function ValidationMiddlewareFactory() {
       next: express.NextFunction
     ): void => {
       const validator = new Validator();
+
       for (let key in req.body) {
         validator[key] = req.body[key];
       }
+
       validateOrReject(validator)
         .then(() => next())
         .catch((e) => {

@@ -3,10 +3,9 @@ import * as jwt from 'jsonwebtoken';
 
 export const checkJwt =
   () => (req: Request, res: Response, next: NextFunction) => {
-    let token = <string>req.headers.authorization;
-    token = token.slice(7);
+    const token = <string>req.headers.authorization.slice(7);
     let jwtPayload;
-    const secret_key = process.env.SECRET_JWT || 'secret_jwt';
+    const secret_key = process.env.SECRET_JWT;
 
     try {
       jwtPayload = jwt.verify(token, secret_key);
@@ -20,6 +19,8 @@ export const checkJwt =
     const newToken = jwt.sign({ userId, email }, secret_key, {
       expiresIn: '1h',
     });
+
     res.setHeader('token', newToken);
+
     next();
   };

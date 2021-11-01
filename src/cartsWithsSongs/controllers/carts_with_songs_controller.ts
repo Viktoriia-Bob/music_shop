@@ -4,33 +4,38 @@ import {
   httpGet,
   httpPatch,
   httpPost,
+  httpPut,
+  queryParam,
   requestBody,
   requestParam,
+  response,
 } from 'inversify-express-utils';
-import { Repository } from 'typeorm';
+import { inject } from 'inversify';
+import { Response } from 'express';
+
 import { CartWithSongs } from '../entities/carts_with_songs_entity';
 import { TYPE } from '../../constants/types';
-import { inject } from 'inversify';
+import { checkJwt } from '../../middlewares/check_jwt_middleware';
+import { CartsWithSongsService } from '../services/carts_with_songs_service';
 
-@controller('/cart-with-songs')
+@controller('/cart-with-songs', checkJwt())
 export class CartsWithSongsController {
-  private readonly _cartRepository: Repository<CartWithSongs>;
-
   constructor(
-    @inject(TYPE.CartWithSongsRepository)
-    cartRepository: Repository<CartWithSongs>
-  ) {
-    this._cartRepository = cartRepository;
-  }
+    @inject(TYPE.CartsWithSongsService)
+    private cartsWithSongsService: CartsWithSongsService
+  ) {}
 
   @httpGet('/')
-  public async getCarts() {
-    return this._cartRepository.find();
+  public async getCarts(
+    @queryParam('skip') skip = 0,
+    @queryParam('take') take = 99
+  ) {
+    return this.cartsWithSongsService.getCarts(skip, take);
   }
 
   @httpPost('/')
   public async createCart(@requestBody() newCart: CartWithSongs) {
-    return this._cartRepository.save(this._cartRepository.create(newCart));
+    return this.cartsWithSongsService.createCart(newCart);
   }
 
   @httpPatch('/:id')
@@ -38,11 +43,35 @@ export class CartsWithSongsController {
     @requestBody() updateCart: CartWithSongs,
     @requestParam('id') id: number
   ) {
-    return this._cartRepository.update({ id }, updateCart);
+    return this.cartsWithSongsService.updateCart(updateCart, id);
   }
 
   @httpDelete('/:id')
   public async removeCart(@requestParam('id') id: number) {
-    return this._cartRepository.delete({ id });
+    return this.cartsWithSongsService.removeCart(id);
+  }
+
+  @httpGet('/get-songs-from-cart')
+  public async getSongsFromCart(@response() res: Response) {
+    const id = await res.locals.jwtPayload.userId;
+    return this.cartsWithSongsService.getSongsFromCart(id);
+  }
+
+  @httpPut('/add-song')
+  public async addSong(
+    @queryParam('songId') songId: number,
+    @response() res: Response
+  ) {
+    const id = await res.locals.jwtPayload.userId;
+    return this.cartsWithSongsService.addSong(songId, id);
+  }
+
+  @httpPut('/delete-song')
+  public async deleteSong(
+    @queryParam('songId') songId: number,
+    @response() res: Response
+  ) {
+    const id = await res.locals.jwtPayload.userId;
+    return this.cartsWithSongsService.deleteSong(songId, id);
   }
 }
