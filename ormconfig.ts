@@ -8,9 +8,8 @@ const config: ConnectionOptions = {
   password: process.env.POSTGRES_PASSWORD || 'secret',
   database: process.env.POSTGRES_DB || 'music_shop',
   synchronize: false,
-  entities: ['./src/*/entities/*_entity{.ts,.js}'],
-  // entities: [__dirname + '/src/*/entities/*_entity{.ts,.js}'],
-  migrations: ['./src/migration/*.ts'],
+  entities: ['./dist/src/*/entities/*_entity{.ts,.js}'],
+  migrations: ['./dist/src/migrations/*{.ts,.js}'],
   cli: {
     migrationsDir: 'src/migrations',
   },

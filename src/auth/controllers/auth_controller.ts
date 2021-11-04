@@ -1,10 +1,4 @@
-import {
-  controller,
-  httpGet,
-  httpPost,
-  queryParam,
-  requestBody,
-} from 'inversify-express-utils';
+import { controller, httpPost, requestBody } from 'inversify-express-utils';
 import { inject } from 'inversify';
 
 import { TYPE } from '../../constants/types';
@@ -27,8 +21,8 @@ export class AuthController {
     return this.authService.signUp(newSignUp);
   }
 
-  @httpGet('/confirm')
-  public async confirmToken(@queryParam('token') token) {
-    return this.authService.confirmToken(token);
+  @httpPost('/confirm-code')
+  public async confirmCode(@requestBody() body) {
+    return this.authService.confirmCode(body.phoneNumber, body.code);
   }
 }

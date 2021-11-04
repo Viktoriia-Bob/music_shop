@@ -107,9 +107,6 @@ export class UsersService {
           quantity: 1,
         },
       ],
-      payment_intent_data: {
-        receipt_email: user.email,
-      },
       customer: user.customerId,
       payment_method_types: ['card'],
       mode: 'payment',
@@ -139,5 +136,12 @@ export class UsersService {
     user.cartWithSongs.listOfSongs = [];
 
     return this._userRepository.save(user);
+  }
+
+  public async payments(id) {
+    const user = await this._userRepository.findOne(id);
+    return this.stripe.charges.list({
+      customer: user.customerId,
+    });
   }
 }
