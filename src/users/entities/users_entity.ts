@@ -6,7 +6,6 @@ import {
   ManyToMany,
   OneToOne,
   PrimaryGeneratedColumn,
-  Unique,
 } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { roleEnums } from '../enums/role_enums';
@@ -15,7 +14,6 @@ import { CartWithSongs } from '../../cartsWithsSongs/entities/carts_with_songs_e
 import { Song } from '../../songs/entities/songs_entity';
 
 @Entity()
-@Unique(['email'])
 export class User {
   @PrimaryGeneratedColumn()
   public id!: number;
@@ -23,11 +21,11 @@ export class User {
   @Column()
   public username!: string;
 
-  @Column({ unique: true })
-  public email!: string;
-
   @Column({ default: false })
-  public emailVerify!: boolean;
+  public verify!: boolean;
+
+  @Column({ unique: true })
+  public phoneNumber!: string;
 
   @Column()
   public password!: string;

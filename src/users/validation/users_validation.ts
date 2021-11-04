@@ -1,10 +1,10 @@
 import {
   IsBoolean,
-  IsEmail,
   IsEnum,
   IsInt,
   IsNotEmpty,
   IsOptional,
+  // IsPhoneNumber,
   IsString,
 } from 'class-validator';
 import { roleEnums } from '../enums/role_enums';
@@ -18,13 +18,14 @@ export class UserValidator {
   @IsNotEmpty()
   username;
 
-  @IsEmail()
-  @IsNotEmpty()
-  email;
-
   @IsBoolean()
   @IsNotEmpty()
-  emailVerify;
+  verify;
+
+  @IsOptional()
+  @IsString()
+  // @IsPhoneNumber()
+  phoneNumber;
 
   @IsString()
   @IsNotEmpty()

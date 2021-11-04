@@ -96,4 +96,9 @@ export class UsersController {
     const id = await res.locals.jwtPayload.userId;
     return this.usersService.addSongToBought(id);
   }
+
+  @httpGet('/payments/:id')
+  public async payments(@requestParam('id') id) {
+    return this.usersService.payments(id);
+  }
 }

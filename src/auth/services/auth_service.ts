@@ -2,7 +2,6 @@ import { inject, injectable } from 'inversify';
 import { Repository } from 'typeorm';
 import * as jwt from 'jsonwebtoken';
 import Stripe from 'stripe';
-// import * as nodemailer from 'nodemailer';
 
 import { User } from '../../users/entities/users_entity';
 import { Wishlist } from '../../wishlists/entities/wishlists_entity';
@@ -19,9 +18,6 @@ export class AuthService {
   private readonly _wishlistRepository: Repository<Wishlist>;
   private readonly _cartWithSongsRepository: Repository<CartWithSongs>;
   private stripe: Stripe;
-  // private _transporter: nodemailer.Transporter;
-  // private readonly emailUser = process.env.EMAIL_FOR_MAIL;
-  // private readonly passwordEmail = process.env.PASSWORD_FOR_MAIL;
 
   constructor(
     @inject(TYPE.UserRepository) userRepository: Repository<User>,
@@ -37,22 +33,16 @@ export class AuthService {
       apiVersion: '2020-08-27',
       typescript: true,
     });
-    // this._transporter = nodemailer.createTransport({
-    //   service: 'gmail',
-    //   auth: {
-    //     user: this.emailUser,
-    //     pass: this.passwordEmail,
-    //   },
-    // });
   }
 
   public async signIn(newSignIn: SignInDto) {
+    newSignIn.phoneNumber = newSignIn.phoneNumber.replace(/\D+/g, '');
     const user = await this._userRepository.findOneOrFail({
-      where: { email: newSignIn.email },
+      where: { phoneNumber: newSignIn.phoneNumber },
     });
 
-    if (!user.emailVerify) {
-      return `email not verified`;
+    if (!user.verify) {
+      return `phone not verified`;
     }
 
     if (!user.checkIfUnencryptedPasswordIsValid(newSignIn.password)) {
@@ -62,13 +52,13 @@ export class AuthService {
     const secretKey = process.env.SECRET_JWT;
 
     const accessToken = jwt.sign(
-      { userId: user.id, email: user.email },
+      { userId: user.id, phoneNumber: user.phoneNumber },
       secretKey,
       { expiresIn: '1d' }
     );
 
     const refreshToken = jwt.sign(
-      { userId: user.id, email: user.email },
+      { userId: user.id, phoneNumber: user.phoneNumber },
       secretKey,
       { expiresIn: '7d' }
     );
@@ -77,10 +67,15 @@ export class AuthService {
   }
 
   public async signUp(newSignUp: SignUpDto) {
+    newSignUp.phoneNumber = newSignUp.phoneNumber.replace(/\D+/g, '');
     if (!newSignUp.role) {
       newSignUp.role = roleEnums.user;
     }
-    if (!(await this._userRepository.findOne({ email: newSignUp.email }))) {
+    if (
+      !(await this._userRepository.findOne({
+        phoneNumber: newSignUp.phoneNumber,
+      }))
+    ) {
       const user = await this._userRepository.create(newSignUp);
       user.hashPassword();
       user.wishlist = await this._wishlistRepository.create({
@@ -93,7 +88,7 @@ export class AuthService {
       });
       const CreateCustomer = async () => {
         const params: Stripe.CustomerCreateParams = {
-          email: user.email,
+          phone: user.phoneNumber.toString(),
           name: user.username,
         };
         const customer: Stripe.Customer = await this.stripe.customers.create(
@@ -103,23 +98,23 @@ export class AuthService {
       };
       await CreateCustomer();
       await this._userRepository.save(user);
-      const token = jwt.sign(
-        { userId: user.id, email: user.email },
-        process.env.SECRET_JWT,
-        { expiresIn: '1h' }
-      );
-      await this.mailService.sendSmsConfirmation();
-      await this.mailService.sendConfirmation(user, token);
-      return { sendToEmail: true };
+      await this.mailService.sendSmsConfirmation(user);
+      return { sendSms: true };
     }
     return { exists: true, info: `User is exists` };
   }
 
-  public async confirmToken(token) {
-    let jwtPayload = jwt.verify(token, process.env.SECRET_JWT);
-    const user = await this._userRepository.findOne(jwtPayload.userId);
-    if (user) {
-      user.emailVerify = true;
+  public async confirmCode(phoneNumber, code) {
+    phoneNumber = phoneNumber.replace(/\D+/g, '');
+    const user = await this._userRepository.findOne({
+      phoneNumber: phoneNumber,
+    });
+    const { confirm } = await this.mailService.checkCodeVerification(
+      phoneNumber,
+      code
+    );
+    if (confirm) {
+      user.verify = true;
       await this._userRepository.save(user);
       return { confirm: true };
     }

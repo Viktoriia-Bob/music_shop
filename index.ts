@@ -1,6 +1,6 @@
 import * as dotenv from 'dotenv';
 dotenv.config({
-  path: '/home/laptop/Documents/projects/music_shop/.env',
+  path: './.env',
 });
 import 'reflect-metadata';
 import { Container } from 'inversify';
@@ -8,12 +8,14 @@ import { InversifyExpressServer } from 'inversify-express-utils';
 import { bindings } from './inversify.config';
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
+
 import { errorMiddleware } from './src/middlewares/error_middleware';
 
 (async () => {
   const port = 3001;
   const container = new Container();
   await container.loadAsync(bindings);
+  // @ts-ignore
   const app = new InversifyExpressServer(container);
   app.setConfig((expressApplication) => {
     expressApplication.use(
