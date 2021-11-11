@@ -62,14 +62,15 @@ export class UsersController {
     await this.usersService.removeUser(idParam);
   }
 
-  @httpGet('/list-of-bought-songs/')
+  @httpGet('/list-of-bought-songs')
   public async listOfBoughtSongs(
     @response() res: Response,
     @queryParam('skip') skip = 0,
-    @queryParam('take') take = 99
+    @queryParam('take') take = 99,
+    @queryParam('list') list = false
   ) {
     const id = res.locals.jwtPayload.userId;
-    return this.usersService.listOfBoughtSongs(id, skip, take);
+    return this.usersService.listOfBoughtSongs(id, skip, take, list);
   }
 
   @httpPut('/block-user/:id', checkJwt(), checkRole(roleEnums.admin))
@@ -91,10 +92,10 @@ export class UsersController {
     return this.usersService.updateUserRole(id, role);
   }
 
-  @httpGet('/add-song-to-bought')
-  public async addSongToBought(@response() res: Response) {
+  @httpPost('/add-song-to-bought')
+  public async addSongToBought(@response() res: Response, @requestBody() body) {
     const id = await res.locals.jwtPayload.userId;
-    return this.usersService.addSongToBought(id);
+    return this.usersService.addSongToBought(id, body.ids);
   }
 
   @httpGet('/payments/:id')

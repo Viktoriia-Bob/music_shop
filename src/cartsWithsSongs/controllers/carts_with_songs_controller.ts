@@ -52,9 +52,12 @@ export class CartsWithSongsController {
   }
 
   @httpGet('/get-songs-from-cart')
-  public async getSongsFromCart(@response() res: Response) {
+  public async getSongsFromCart(
+    @response() res: Response,
+    @queryParam('list') list = false
+  ) {
     const id = await res.locals.jwtPayload.userId;
-    return this.cartsWithSongsService.getSongsFromCart(id);
+    return this.cartsWithSongsService.getSongsFromCart(id, list);
   }
 
   @httpPut('/add-song')

@@ -1,11 +1,12 @@
 import { inject, injectable } from 'inversify';
-import { Between, Like, Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 
 import { Song } from '../entities/songs_entity';
 import { GenreSongs } from '../entities/genre_songs_entity';
 import { AuthorSongs } from '../entities/author_songs_entity';
 import { AuthorSkinTone } from '../entities/author_skintone_entity';
 import { TYPE } from '../../constants/types';
+import signedUrlMiddleware = require('../../middlewares/signed_url_middleware');
 
 @injectable()
 export class SongsService {
@@ -29,9 +30,9 @@ export class SongsService {
     this._authorSkinRepository = authorSkinRepository;
   }
 
-  public async get(skip, take) {
+  public async get(skip, take, isList) {
     if (take < 100) {
-      return this._songRepository.find({
+      const songs = await this._songRepository.find({
         skip,
         take,
         relations: ['genre', 'author'],
@@ -39,6 +40,14 @@ export class SongsService {
           id: 'ASC',
         },
       });
+
+      if (isList) {
+        songs.map(
+          async (song) => (song.image = await signedUrlMiddleware(song.image))
+        );
+      }
+
+      return songs;
     } else {
       return `Limit must be less than 100`;
     }
@@ -51,8 +60,6 @@ export class SongsService {
   public async post(newSong) {
     const genre = await this._genreSongsRepository.findOne(newSong.genre);
     const author = await this._authorSongsRepository.findOne(newSong.author);
-
-    newSong.image = `https://${process.env.S3_BUCKET_NAME}.s3.eu-central-1.amazonaws.com/${newSong.image}`;
 
     return this._songRepository.save(
       this._songRepository.create({ ...newSong, genre, author })
@@ -76,10 +83,6 @@ export class SongsService {
       delete updateSong.author;
     }
 
-    if (updateSong.image) {
-      updateSong.image = `https://${process.env.S3_BUCKET_NAME}.s3.eu-central-1.amazonaws.com/${updateSong.image}`;
-    }
-
     if (!updateSong.name) {
       delete updateSong.name;
     }
@@ -96,48 +99,60 @@ export class SongsService {
   }
 
   public async filterByGenre(genre: string, skip, take) {
+    const genreObj = await this._genreSongsRepository.findOne({ name: genre });
     const songs = await this._songRepository.find({
       relations: ['genre', 'author'],
+      where: { genre: genreObj },
       skip: skip,
       take: take,
     });
 
-    return songs.filter((song) => song.genre.name === genre);
+    songs.map(
+      async (song) => (song.image = await signedUrlMiddleware(song.image))
+    );
+
+    return songs;
   }
 
   public async filterByAuthor(author: string, skip, take) {
+    const songs = await this._songRepository
+      .createQueryBuilder('song')
+      .leftJoinAndSelect('song.author', 'author_songs')
+      .leftJoinAndSelect('song.genre', 'genre_songs')
+      .where('LOWER(author_songs.name) LIKE LOWER(:value)', {
+        value: `%${author}%`,
+      })
+      .skip(skip)
+      .take(take)
+      .getMany();
+
+    songs.map(
+      async (song) => (song.image = await signedUrlMiddleware(song.image))
+    );
+
+    return songs;
+  }
+
+  public async filterByAuthorSkinTone(skintone: string, skip, take) {
+    const skinToneObj = await this._authorSkinRepository.findOne({
+      name: skintone,
+    });
     const songs = await this._songRepository.find({
       relations: ['author', 'genre'],
+      where: { author: { skinTone: skinToneObj } },
       skip: skip,
       take: take,
     });
 
-    return songs.filter((song) => song.author.name === author);
-  }
-
-  public async filterByAuthorSkinTone(skintone: string, skip, take) {
-    const songs = await this._songRepository.find({
-      relations: ['author', 'genre'],
-    });
-
-    const authors = await this._authorSongsRepository.find({
-      relations: ['skinTone'],
-    });
-
-    const filterAuthors = authors.filter(
-      (author) => author.skinTone.name === skintone
+    songs.map(
+      async (song) => (song.image = await signedUrlMiddleware(song.image))
     );
 
-    return songs.filter((song) =>
-      filterAuthors.find((author) => author.id === song.author.id, {
-        skip: skip,
-        take: take,
-      })
-    );
+    return songs;
   }
 
   public async filterByPrice(priceLow: number, priceHigh: number, skip, take) {
-    return this._songRepository.find({
+    const songs = await this._songRepository.find({
       relations: ['author', 'genre'],
       where: {
         price: Between(priceLow, priceHigh),
@@ -145,25 +160,39 @@ export class SongsService {
       skip: skip,
       take: take,
     });
+
+    songs.map(
+      async (song) => (song.image = await signedUrlMiddleware(song.image))
+    );
+
+    return songs;
   }
 
   public async searchByName(words, skip, take) {
-    return this._songRepository.find({
-      relations: ['author', 'genre'],
-      where: { name: Like(`%${words}%`) },
-      skip: skip,
-      take: take,
-    });
+    const songs = await this._songRepository
+      .createQueryBuilder('song')
+      .where('LOWER(song.name) LIKE LOWER(:value)', { value: `%${words}%` })
+      .leftJoinAndSelect('song.author', 'author_songs')
+      .leftJoinAndSelect('song.genre', 'genre_songs')
+      .skip(skip)
+      .take(take)
+      .getMany();
+
+    songs.map(
+      async (song) => (song.image = await signedUrlMiddleware(song.image))
+    );
+
+    return songs;
   }
 
   public async getFilters() {
     const genre = await this._genreSongsRepository.find();
-    const author = await this._authorSongsRepository.find();
     const authorSkin = await this._authorSkinRepository.find();
+    const author = await this._authorSongsRepository.find();
     return {
       genres: { id: 1, fullName: `Genres`, items: genre },
-      authors: { id: 2, fullName: `Authors`, items: author },
-      skinTones: { id: 3, fullName: `Author's skin tone`, items: authorSkin },
+      skinTones: { id: 2, fullName: `Author's skin tone`, items: authorSkin },
+      authors: { id: 3, fullName: `Authors`, items: author },
     };
   }
 

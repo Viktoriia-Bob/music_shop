@@ -5,7 +5,6 @@ import {
   httpPatch,
   httpPost,
   queryParam,
-  request,
   requestBody,
   requestParam,
 } from 'inversify-express-utils';
@@ -31,9 +30,9 @@ export class SongsController {
   public async get(
     @queryParam('skip') skip = 0,
     @queryParam('take') take = 99,
-    @request() req
+    @queryParam('list') list = false
   ) {
-    return this.songsService.get(skip, take);
+    return this.songsService.get(skip, take, list);
   }
 
   @httpGet('/get-by-id/:id')
@@ -74,7 +73,7 @@ export class SongsController {
     return this.songsService.filterByGenre(genre, skip, take);
   }
 
-  @httpGet('/filter-by-author/:author')
+  @httpGet('/search-author/:author')
   public async filterByAuthor(
     @requestParam('author') author: string,
     @queryParam('skip') skip = 0,
@@ -92,10 +91,9 @@ export class SongsController {
     return this.songsService.filterByAuthorSkinTone(skintone, skip, take);
   }
 
-  @httpGet('/filter-by-price')
+  @httpPost('/filter-by-price')
   public async filterByPrice(
-    @queryParam('priceLow') priceLow: number = 0,
-    @queryParam('priceHigh') priceHigh: number = 1000000,
+    @requestBody() { priceLow, priceHigh },
     @queryParam('skip') skip = 0,
     @queryParam('take') take = 99
   ) {

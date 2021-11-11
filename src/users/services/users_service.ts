@@ -1,11 +1,12 @@
 import { inject, injectable } from 'inversify';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import Stripe from 'stripe';
 
 import { User } from '../entities/users_entity';
 import { Song } from '../../songs/entities/songs_entity';
 import { TYPE } from '../../constants/types';
 import { roleEnums } from '../enums/role_enums';
+import signedUrlMiddleware = require('../../middlewares/signed_url_middleware');
 
 @injectable()
 export class UsersService {
@@ -58,15 +59,23 @@ export class UsersService {
     await this._userRepository.delete({ id: idParam });
   }
 
-  public async listOfBoughtSongs(userId, skip, take) {
+  public async listOfBoughtSongs(userId, skip, take, isList) {
     const list = await this._userRepository.findOne(userId, {
       relations: ['boughtSongs'],
     });
 
-    return this._songRepository.findByIds(
+    const songs = await this._songRepository.findByIds(
       [...list.boughtSongs.map((song) => song.id)],
       { relations: ['author', 'genre'], take: take, skip: skip }
     );
+
+    if (list) {
+      songs.map(
+        async (song) => (song.image = await signedUrlMiddleware(song.image))
+      );
+    }
+
+    return songs;
   }
 
   public async blockUser(id: number) {
@@ -90,8 +99,8 @@ export class UsersService {
       .map((song) => song.price)
       .reduce((prev, cur) => prev + cur);
 
-    const name = songs
-      .map((song) => song.name)
+    const ids = songs
+      .map((song) => song.id.toString())
       .reduce((prev, cur) => prev.concat('_' + cur));
 
     const session = await this.stripe.checkout.sessions.create({
@@ -101,7 +110,7 @@ export class UsersService {
             unit_amount: price,
             currency: 'usd',
             product_data: {
-              name: name,
+              name: ids,
             },
           },
           quantity: 1,
@@ -110,7 +119,7 @@ export class UsersService {
       customer: user.customerId,
       payment_method_types: ['card'],
       mode: 'payment',
-      success_url: process.env.SUCCESS_URL,
+      success_url: process.env.SUCCESS_URL + ids,
       cancel_url: process.env.CANCEL_URL,
     });
 
@@ -125,12 +134,16 @@ export class UsersService {
     return this._userRepository.save(user);
   }
 
-  public async addSongToBought(userId) {
+  public async addSongToBought(userId, ids) {
+    ids = ids.split('_');
+    ids = ids.forEach((id) => Number(id));
+    const songs = await this._songRepository.find({
+      where: { id: In(ids) },
+    });
+
     const user = await this._userRepository.findOne(userId, {
       relations: ['boughtSongs', 'cartWithSongs', 'cartWithSongs.listOfSongs'],
     });
-
-    const songs = user.cartWithSongs.listOfSongs;
 
     user.boughtSongs.push(...songs);
     user.cartWithSongs.listOfSongs = [];
