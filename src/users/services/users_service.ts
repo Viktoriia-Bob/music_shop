@@ -70,9 +70,7 @@ export class UsersService {
     );
 
     if (list) {
-      songs.map(
-        async (song) => (song.image = await signedUrlMiddleware(song.image))
-      );
+      return signedUrlMiddleware(songs);
     }
 
     return songs;

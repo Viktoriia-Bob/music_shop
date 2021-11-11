@@ -42,9 +42,7 @@ export class SongsService {
       });
 
       if (isList) {
-        songs.map(
-          async (song) => (song.image = await signedUrlMiddleware(song.image))
-        );
+        return signedUrlMiddleware(songs);
       }
 
       return songs;
@@ -107,11 +105,7 @@ export class SongsService {
       take: take,
     });
 
-    songs.map(
-      async (song) => (song.image = await signedUrlMiddleware(song.image))
-    );
-
-    return songs;
+    return signedUrlMiddleware(songs);
   }
 
   public async filterByAuthor(author: string, skip, take) {
@@ -126,11 +120,7 @@ export class SongsService {
       .take(take)
       .getMany();
 
-    songs.map(
-      async (song) => (song.image = await signedUrlMiddleware(song.image))
-    );
-
-    return songs;
+    return signedUrlMiddleware(songs);
   }
 
   public async filterByAuthorSkinTone(skintone: string, skip, take) {
@@ -144,11 +134,7 @@ export class SongsService {
       take: take,
     });
 
-    songs.map(
-      async (song) => (song.image = await signedUrlMiddleware(song.image))
-    );
-
-    return songs;
+    return signedUrlMiddleware(songs);
   }
 
   public async filterByPrice(priceLow: number, priceHigh: number, skip, take) {
@@ -161,11 +147,7 @@ export class SongsService {
       take: take,
     });
 
-    songs.map(
-      async (song) => (song.image = await signedUrlMiddleware(song.image))
-    );
-
-    return songs;
+    return signedUrlMiddleware(songs);
   }
 
   public async searchByName(words, skip, take) {
@@ -178,11 +160,7 @@ export class SongsService {
       .take(take)
       .getMany();
 
-    songs.map(
-      async (song) => (song.image = await signedUrlMiddleware(song.image))
-    );
-
-    return songs;
+    return signedUrlMiddleware(songs);
   }
 
   public async getFilters() {
