@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { CartWithSongs } from '../entities/carts_with_songs_entity';
 import { Song } from '../../songs/entities/songs_entity';
 import { TYPE } from '../../constants/types';
+import signedUrlMiddleware = require('../../middlewares/signed_url_middleware');
 
 @injectable()
 export class CartsWithSongsService {
@@ -39,17 +40,23 @@ export class CartsWithSongsService {
     return this._cartRepository.delete({ id });
   }
 
-  public async getSongsFromCart(id) {
+  public async getSongsFromCart(id, isList) {
     const carts = await this._cartRepository.find({
       relations: ['owner', 'listOfSongs'],
     });
 
     const cart = await carts.find((item) => item?.owner?.id === id);
 
-    return this._songRepository.findByIds(
+    const songs = await this._songRepository.findByIds(
       [...cart.listOfSongs.map((song) => song.id)],
       { relations: ['author', 'genre'] }
     );
+
+    if (isList) {
+      return signedUrlMiddleware(songs);
+    }
+
+    return songs;
   }
 
   public async addSong(songId: number, userId: number) {
