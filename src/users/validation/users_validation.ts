@@ -4,7 +4,6 @@ import {
   IsInt,
   IsNotEmpty,
   IsOptional,
-  // IsPhoneNumber,
   IsString,
 } from 'class-validator';
 import { roleEnums } from '../enums/role_enums';
@@ -24,7 +23,6 @@ export class UserValidator {
 
   @IsOptional()
   @IsString()
-  // @IsPhoneNumber()
   phoneNumber;
 
   @IsString()

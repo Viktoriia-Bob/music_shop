@@ -54,10 +54,11 @@ export class WishlistsController {
   public async getSongsFromWishlist(
     @response() res: Response,
     @queryParam('skip') skip = 0,
-    @queryParam('take') take = 99
+    @queryParam('take') take = 99,
+    @queryParam('list') list = false
   ) {
     const id = await res.locals.jwtPayload.userId;
-    return this.wishlistsService.getSongsFromWishlist(id, skip, take);
+    return this.wishlistsService.getSongsFromWishlist(id, skip, take, list);
   }
 
   @httpPut('/add-song')
